@@ -1,9 +1,10 @@
+import 'package:agridiary/pages/camera_capture_page.dart';
 import 'package:agridiary/pages/explore_page.dart';
 import 'package:agridiary/pages/insights_page.dart';
+import 'package:agridiary/pages/marketplace_page.dart';
 import 'package:agridiary/pages/notes_page.dart';
 import 'package:agridiary/pages/profile_page.dart';
 import 'package:agridiary/pages/audio_recorder_page.dart';
-import 'package:agridiary/pages/camera_capture_page.dart'; // New import
 import 'package:agridiary/providers/user_profile_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as badges;
@@ -21,22 +22,25 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final pages = [
+  int _selectedIndex = 0;
+
+  final List<Widget> _pages = [
     const ExplorePage(),
     const NotesPage(),
     const InsightsPage(),
+    const MarketplacePage(),
     const ProfilePage(),
   ];
-  int currentIndex = 0;
+
   final ValueNotifier<bool> isDialOpen = ValueNotifier<bool>(false);
 
   void _onDrawerNavigation(int index) {
     setState(() {
-      currentIndex = index;
+      _selectedIndex = index;
     });
     Navigator.of(context).pop(); // Close the drawer
   }
-  
+
   // Handle saved audio note
   void _handleAudioSaved(Note note) {
     ScaffoldMessenger.of(
@@ -44,7 +48,7 @@ class _HomePageState extends State<HomePage> {
     ).showSnackBar(SnackBar(content: Text('Audio note saved: ${note.title}')));
     // Switch to notes page to show the new note
     setState(() {
-      currentIndex = 1; // Switch to notes page
+      _selectedIndex = 1; // Switch to notes page
     });
   }
 
@@ -55,7 +59,7 @@ class _HomePageState extends State<HomePage> {
     ).showSnackBar(SnackBar(content: Text('Photo note saved: ${note.title}')));
     // Switch to notes page to show the new note
     setState(() {
-      currentIndex = 1; // Switch to notes page
+      _selectedIndex = 1; // Switch to notes page
     });
   }
 
@@ -65,41 +69,47 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       drawer: AppDrawer(onNavigation: _onDrawerNavigation),
-      appBar: currentIndex == 0
-          ? AppBar(
-              centerTitle: false,
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Hi ${userProfileProvider.name.split(' ').first} 👋',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  Text(
-                    'Enjoy our services',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 15.0),
-                  child: IconButton.filledTonal(
-                    onPressed: () {},
-                    icon: badges.Badge(
-                      badgeContent: const Text(
-                        '3',
-                        style: TextStyle(color: Colors.white, fontSize: 12),
+      appBar:
+          _selectedIndex == 0
+              ? AppBar(
+                centerTitle: false,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hi ${userProfileProvider.name.split(' ').first} 👋',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    Text(
+                      'Enjoy our services',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+                actions: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 15.0),
+                    child: IconButton.filledTonal(
+                      onPressed: () {},
+                      icon: badges.Badge(
+                        badgeContent: const Text(
+                          '3',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                        badgeStyle: const badges.BadgeStyle(
+                          badgeColor: Colors.green,
+                        ),
+                        position: badges.BadgePosition.topEnd(
+                          top: -15,
+                          end: -12,
+                        ),
+                        child: const Icon(IconlyLight.notification),
                       ),
-                      badgeStyle: const badges.BadgeStyle(badgeColor: Colors.green),
-                      position: badges.BadgePosition.topEnd(top: -15, end: -12),
-                      child: const Icon(IconlyLight.notification),
                     ),
                   ),
-                ),
-              ],
-            )
-          : null,
+                ],
+              )
+              : null,
       floatingActionButton: SpeedDial(
         animatedIcon: AnimatedIcons.menu_close,
         animatedIconTheme: const IconThemeData(size: 22.0),
@@ -145,34 +155,39 @@ class _HomePageState extends State<HomePage> {
         onOpen: () => isDialOpen.value = true,
         onClose: () => isDialOpen.value = false,
       ),
-      body: pages[currentIndex],
+      body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
+        currentIndex: _selectedIndex,
         onTap: (index) {
           setState(() {
-            currentIndex = index;
+            _selectedIndex = index;
           });
         },
         type: BottomNavigationBarType.fixed,
-        items: const [
+        items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(IconlyLight.home),
-            activeIcon: Icon(IconlyBold.home),
-            label: 'Home',
+            icon: Icon(Icons.explore_outlined),
+            activeIcon: Icon(Icons.explore),
+            label: 'Explore',
           ),
           BottomNavigationBarItem(
-            icon: Icon(IconlyLight.category),
-            activeIcon: Icon(IconlyBold.category),
+            icon: Icon(Icons.note_alt_outlined),
+            activeIcon: Icon(Icons.note_alt),
             label: 'Notes',
           ),
           BottomNavigationBarItem(
-            icon: Icon(IconlyLight.show),
-            activeIcon: Icon(IconlyBold.show),
+            icon: Icon(Icons.insights_outlined),
+            activeIcon: Icon(Icons.insights),
             label: 'Insights',
           ),
           BottomNavigationBarItem(
-            icon: Icon(IconlyLight.profile),
-            activeIcon: Icon(IconlyBold.profile),
+            icon: Icon(Icons.store_outlined),
+            activeIcon: Icon(Icons.store),
+            label: 'Marketplace',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
             label: 'Profile',
           ),
         ],

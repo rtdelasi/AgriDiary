@@ -136,7 +136,7 @@ class InsightsPage extends StatelessWidget {
           belowBarData: BarAreaData(
             show: true,
             gradient: LinearGradient(
-              colors: [Colors.green.withOpacity(0.3), Colors.lightGreen.withOpacity(0.0)],
+              colors: [Colors.green.withAlpha(50), Colors.lightGreen.withAlpha(0)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -220,7 +220,7 @@ class InsightsPage extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 28,
-              backgroundColor: color.withOpacity(0.2),
+              backgroundColor: color.withAlpha(50),
               child: Icon(icon, size: 28, color: color),
             ),
             const SizedBox(height: 12),

@@ -3,12 +3,13 @@ import 'package:agridiary/providers/user_profile_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:agridiary/providers/theme_provider.dart';
+import 'dart:io';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  State<ProfilePage> createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
@@ -39,9 +40,6 @@ class _ProfilePageState extends State<ProfilePage> {
           _buildProfileHeader(userProfileProvider),
           const SizedBox(height: 32),
           _buildProfileMenu(context, themeProvider, userProfileProvider),
-          const SizedBox(height: 24),
-          _buildLogoutButton(context),
-          const SizedBox(height: 24),
         ],
       ),
     );
@@ -50,9 +48,13 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildProfileHeader(UserProfileProvider userProfileProvider) {
     return Column(
       children: <Widget>[
-        const CircleAvatar(
+        CircleAvatar(
           radius: 50,
-          backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=a042581f4e29026704d'),
+          backgroundImage: userProfileProvider.photoPath != null
+              ? FileImage(File(userProfileProvider.photoPath!))
+              : const NetworkImage(
+                      'https://i.pravatar.cc/150?u=a042581f4e29026704d')
+                  as ImageProvider,
         ),
         const SizedBox(height: 16),
         Text(
@@ -109,6 +111,13 @@ class _ProfilePageState extends State<ProfilePage> {
             title: 'Help & Support',
             onTap: () {},
           ),
+          const Divider(),
+          _buildMenuItem(
+            context,
+            icon: Icons.logout,
+            title: 'Logout',
+            onTap: () {},
+          ),
         ],
       ),
     );
@@ -120,28 +129,6 @@ class _ProfilePageState extends State<ProfilePage> {
       title: Text(title),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: onTap,
-    );
-  }
-
-  Widget _buildLogoutButton(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: ElevatedButton.icon(
-        onPressed: () {
-          // Implement logout functionality
-        },
-        icon: const Icon(Icons.logout, color: Colors.red),
-        label: const Text(
-          'Logout',
-          style: TextStyle(color: Colors.red),
-        ),
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
     );
   }
 }

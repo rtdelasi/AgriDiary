@@ -1,51 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:agridiary/models/task.dart';
+import 'package:provider/provider.dart';
+import 'package:agridiary/providers/task_provider.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
 
   @override
-  _ExplorePageState createState() => _ExplorePageState();
+  State<ExplorePage> createState() => _ExplorePageState();
 }
 
 class _ExplorePageState extends State<ExplorePage> {
-  final List<Task> _tasks = [
-    Task(title: 'Check for pests', description: 'Inspect the north field'),
-    Task(
-        title: 'Water the crops',
-        description: 'Use the new irrigation system',
-        isCompleted: true),
-    Task(title: 'Harvest tomatoes', description: 'Morning harvest'),
-    Task(title: 'Buy new seeds', description: 'Visit the local store'),
-  ];
-
-  void _addTask(String title) {
-    if (title.isNotEmpty) {
-      setState(() {
-        _tasks.add(Task(title: title, description: ''));
-      });
-      Navigator.of(context).pop();
-    }
-  }
-
-  void _deleteTask(int index) {
-    setState(() {
-      _tasks.removeAt(index);
-    });
-  }
-
-  void _toggleTaskCompletion(int index) {
-    setState(() {
-      _tasks[index] = Task(
-        title: _tasks[index].title,
-        description: _tasks[index].description,
-        isCompleted: !_tasks[index].isCompleted,
-      );
-    });
-  }
-
-  void _showAddTaskDialog() {
+  void _showAddTaskDialog(TaskProvider taskProvider) {
     final TextEditingController taskController = TextEditingController();
     showDialog(
       context: context,
@@ -66,7 +33,12 @@ class _ExplorePageState extends State<ExplorePage> {
             ),
             ElevatedButton(
               child: const Text('Add'),
-              onPressed: () => _addTask(taskController.text),
+              onPressed: () {
+                if (taskController.text.isNotEmpty) {
+                  taskProvider.addTask(taskController.text);
+                  Navigator.of(context).pop();
+                }
+              },
             ),
           ],
         );
@@ -132,7 +104,7 @@ class _ExplorePageState extends State<ExplorePage> {
           Icon(
             Icons.task_alt,
             size: 50,
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withAlpha(204),
           )
         ],
       ),
@@ -140,63 +112,67 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   Widget _buildMyPlansSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Consumer<TaskProvider>(
+      builder: (context, taskProvider, child) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'My Plans',
-              style: GoogleFonts.lato(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'My Plans',
+                  style: GoogleFonts.lato(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add_circle, color: Colors.green, size: 30),
+                  onPressed: () => _showAddTaskDialog(taskProvider),
+                ),
+              ],
             ),
-            IconButton(
-              icon: const Icon(Icons.add_circle, color: Colors.green, size: 30),
-              onPressed: _showAddTaskDialog,
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: taskProvider.tasks.isEmpty
+                  ? const Center(
+                      child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24.0),
+                      child: Text('No tasks yet. Add one!'),
+                    ))
+                  : ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: taskProvider.tasks.length,
+                      itemBuilder: (context, index) {
+                        final task = taskProvider.tasks[index];
+                        return _buildTaskItem(task, index, taskProvider);
+                      },
+                      separatorBuilder: (context, index) =>
+                          const Divider(height: 24),
+                    ),
             ),
           ],
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: _tasks.isEmpty
-              ? const Center(
-                  child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24.0),
-                  child: Text('No tasks yet. Add one!'),
-                ))
-              : ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _tasks.length,
-                  itemBuilder: (context, index) {
-                    final task = _tasks[index];
-                    return _buildTaskItem(task, index);
-                  },
-                  separatorBuilder: (context, index) =>
-                      const Divider(height: 24),
-                ),
-        ),
-      ],
+        );
+      },
     );
   }
 
-  Widget _buildTaskItem(Task task, int index) {
+  Widget _buildTaskItem(Task task, int index, TaskProvider taskProvider) {
     return InkWell(
-      onTap: () => _toggleTaskCompletion(index),
+      onTap: () => taskProvider.toggleTaskCompletion(index),
       child: Row(
         children: [
           Checkbox(
             value: task.isCompleted,
-            onChanged: (bool? value) => _toggleTaskCompletion(index),
+            onChanged: (bool? value) => taskProvider.toggleTaskCompletion(index),
             activeColor: Colors.green,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(4),
@@ -216,7 +192,7 @@ class _ExplorePageState extends State<ExplorePage> {
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-            onPressed: () => _deleteTask(index),
+            onPressed: () => taskProvider.deleteTask(index),
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:agridiary/providers/user_profile_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:agridiary/providers/theme_provider.dart';
+import 'dart:io';
 
 class AppDrawer extends StatelessWidget {
   final Function(int) onNavigation;
@@ -68,8 +69,12 @@ class AppDrawer extends StatelessWidget {
         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
       accountEmail: Text(userProfileProvider.email),
-      currentAccountPicture: const CircleAvatar(
-        backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=a042581f4e29026704d'),
+      currentAccountPicture: CircleAvatar(
+        backgroundImage: userProfileProvider.photoPath != null
+            ? FileImage(File(userProfileProvider.photoPath!))
+            : const NetworkImage(
+                    'https://i.pravatar.cc/150?u=a042581f4e29026704d')
+                as ImageProvider,
       ),
       decoration: const BoxDecoration(
         color: Colors.green,

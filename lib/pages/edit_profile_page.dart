@@ -1,4 +1,10 @@
+import 'package:agridiary/providers/user_profile_provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
+import 'dart:io';
 
 class EditProfilePage extends StatefulWidget {
   final String currentName;
@@ -11,19 +17,89 @@ class EditProfilePage extends StatefulWidget {
   });
 
   @override
-  _EditProfilePageState createState() => _EditProfilePageState();
+  State<EditProfilePage> createState() => EditProfilePageState();
 }
 
-class _EditProfilePageState extends State<EditProfilePage> {
+class EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   final _formKey = GlobalKey<FormState>();
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.currentName);
     _emailController = TextEditingController(text: widget.currentEmail);
+    _retrieveLostData();
+  }
+
+  Future<void> _retrieveLostData() async {
+    final LostDataResponse response = await _picker.retrieveLostData();
+    if (response.isEmpty) {
+      return;
+    }
+    if (response.file != null) {
+      if (mounted) {
+        Provider.of<UserProfileProvider>(
+          context,
+          listen: false,
+        ).updateProfilePhoto(response.file!.path);
+      }
+    } else {
+      // Handle error
+      if (kDebugMode) {
+        print(response.exception);
+      }
+    }
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    var status =
+        source == ImageSource.camera
+            ? await Permission.camera.request()
+            : await Permission.photos.request();
+
+    if (status.isGranted) {
+      final pickedFile = await _picker.pickImage(source: source);
+      if (pickedFile != null && mounted) {
+        Provider.of<UserProfileProvider>(
+          context,
+          listen: false,
+        ).updateProfilePhoto(pickedFile.path);
+      }
+    } else {
+      // Handle the case where permission is denied
+    }
+  }
+
+  void _showImageSourceActionSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder:
+          (context) => SafeArea(
+            child: Wrap(
+              children: <Widget>[
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Photo Library'),
+                  onTap: () {
+                    _pickImage(ImageSource.gallery);
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_camera),
+                  title: const Text('Camera'),
+                  onTap: () {
+                    _pickImage(ImageSource.camera);
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+          ),
+    );
   }
 
   @override
@@ -35,10 +111,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   void _saveProfile() {
     if (_formKey.currentState!.validate()) {
-      Navigator.of(context).pop({
-        'name': _nameController.text,
-        'email': _emailController.text,
-      });
+      Navigator.of(
+        context,
+      ).pop({'name': _nameController.text, 'email': _emailController.text});
     }
   }
 
@@ -48,10 +123,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       appBar: AppBar(
         title: const Text('Edit Profile'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.check),
-            onPressed: _saveProfile,
-          ),
+          IconButton(icon: const Icon(Icons.check), onPressed: _saveProfile),
         ],
       ),
       body: Padding(
@@ -60,20 +132,41 @@ class _EditProfilePageState extends State<EditProfilePage> {
           key: _formKey,
           child: ListView(
             children: <Widget>[
-              const Center(
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=a042581f4e29026704d'),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    // Implement change profile picture functionality
-                  },
-                  child: const Text('Change Profile Picture'),
-                ),
+              Consumer<UserProfileProvider>(
+                builder: (context, userProfile, child) {
+                  return Center(
+                    child: Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundImage:
+                              userProfile.photoPath != null
+                                  ? FileImage(File(userProfile.photoPath!))
+                                  : const NetworkImage(
+                                        'https://i.pravatar.cc/150?u=a042581f4e29026704d',
+                                      )
+                                      as ImageProvider,
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundColor: Theme.of(context).primaryColor,
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                              ),
+                              onPressed:
+                                  () => _showImageSourceActionSheet(context),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 32),
               TextFormField(
@@ -109,4 +202,4 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ),
     );
   }
-} 
+}

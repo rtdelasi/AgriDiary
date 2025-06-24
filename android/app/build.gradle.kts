@@ -1,8 +1,8 @@
 plugins {
     id("com.android.application")
-    id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services") // No version here!
 }
 
 android {
@@ -20,11 +20,8 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.agridiary"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23  // Changed from flutter.minSdkVersion to 23 to match plugin requirement
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion.toInt()
         versionCode = flutter.versionCode.toInt()
         versionName = flutter.versionName
@@ -32,8 +29,6 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -41,4 +36,15 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Removed: implementation(platform("com.google.firebase:firebase-bom:32.7.2"))
+    // Removed: implementation("com.google.firebase:firebase-analytics")
+    // Removed: implementation("com.google.firebase:firebase-auth-ktx")
+    // Removed: implementation("com.google.android.gms:play-services-auth:20.7.0")
+}
+
+tasks.withType<JavaCompile> {
+    options.compilerArgs.add("-Xlint:-deprecation")
 }
