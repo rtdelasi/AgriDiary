@@ -2,8 +2,8 @@ import 'package:agridiary/providers/user_profile_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'image_preview_page.dart';
 import 'dart:io';
 
 class EditProfilePage extends StatefulWidget {
@@ -55,21 +55,29 @@ class EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    var status =
-        source == ImageSource.camera
-            ? await Permission.camera.request()
-            : await Permission.photos.request();
-
-    if (status.isGranted) {
-      final pickedFile = await _picker.pickImage(source: source);
-      if (pickedFile != null && mounted) {
-        Provider.of<UserProfileProvider>(
-          context,
-          listen: false,
-        ).updateProfilePhoto(pickedFile.path);
-      }
-    } else {
-      // Handle the case where permission is denied
+    final pickedFile = await _picker.pickImage(source: source);
+    if (pickedFile != null && mounted) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ImagePreviewPage(
+            imagePath: pickedFile.path,
+            onImageSelected: (String croppedImagePath) {
+              Provider.of<UserProfileProvider>(
+                context,
+                listen: false,
+              ).updateProfilePhoto(croppedImagePath);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Profile photo updated successfully!'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+          ),
+        ),
+      );
     }
   }
 

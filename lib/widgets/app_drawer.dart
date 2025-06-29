@@ -15,47 +15,56 @@ class AppDrawer extends StatelessWidget {
     final userProfileProvider = Provider.of<UserProfileProvider>(context);
 
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: <Widget>[
-          _buildDrawerHeader(context, userProfileProvider),
-          _buildDrawerItem(
-            icon: Icons.explore_outlined,
-            text: 'Explore',
-            onTap: () => onNavigation(0),
+      child: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: <Widget>[
+                _buildDrawerHeader(context, userProfileProvider),
+                _buildDrawerItem(
+                  icon: Icons.explore_outlined,
+                  text: 'Explore',
+                  onTap: () => onNavigation(0),
+                ),
+                _buildDrawerItem(
+                  icon: Icons.note_outlined,
+                  text: 'Notes',
+                  onTap: () => onNavigation(1),
+                ),
+                _buildDrawerItem(
+                  icon: Icons.insights_outlined,
+                  text: 'Insights',
+                  onTap: () => onNavigation(2),
+                ),
+                _buildDrawerItem(
+                  icon: Icons.person_outline,
+                  text: 'Profile',
+                  onTap: () => onNavigation(3),
+                ),
+                const Divider(),
+                SwitchListTile(
+                  title: const Text('Dark Mode'),
+                  value: themeProvider.isDarkMode,
+                  onChanged: (value) {
+                    themeProvider.toggleTheme(value);
+                  },
+                  secondary: const Icon(Icons.dark_mode_outlined),
+                ),
+                const Divider(),
+              ],
+            ),
           ),
-          _buildDrawerItem(
-            icon: Icons.note_outlined,
-            text: 'Notes',
-            onTap: () => onNavigation(1),
-          ),
-          _buildDrawerItem(
-            icon: Icons.insights_outlined,
-            text: 'Insights',
-            onTap: () => onNavigation(2),
-          ),
-          _buildDrawerItem(
-            icon: Icons.person_outline,
-            text: 'Profile',
-            onTap: () => onNavigation(3),
-          ),
-          const Divider(),
-          SwitchListTile(
-            title: const Text('Dark Mode'),
-            value: themeProvider.isDarkMode,
-            onChanged: (value) {
-              themeProvider.toggleTheme(value);
-            },
-            secondary: const Icon(Icons.dark_mode_outlined),
-          ),
-          const Divider(),
-          _buildDrawerItem(
-            icon: Icons.logout,
-            text: 'Logout',
-            onTap: () {
-              // Implement logout functionality
-              Navigator.of(context).pop();
-            },
+          Padding(
+            padding: const EdgeInsets.only(bottom: 24.0),
+            child: _buildDrawerItem(
+              icon: Icons.logout,
+              text: 'Logout',
+              onTap: () {
+                // Implement logout functionality
+                Navigator.of(context).pop();
+              },
+            ),
           ),
         ],
       ),

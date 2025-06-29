@@ -12,8 +12,8 @@ class ExplorePage extends StatefulWidget {
 }
 
 class _ExplorePageState extends State<ExplorePage> {
-  int _currentStreak = 7; // Example streak count
-  int _longestStreak = 12; // Example longest streak
+  final int _currentStreak = 7; // Example streak count
+  final int _longestStreak = 12; // Example longest streak
   bool _todayCompleted = false; // Track if user has been active today
 
   @override
@@ -106,7 +106,9 @@ class _ExplorePageState extends State<ExplorePage> {
                 _buildMyPlansSection(cardColor, textColor),
                 const SizedBox(height: 24),
                 _buildFeaturesCard(),
-                const SizedBox(height: 24), // Add bottom padding for better scrolling
+                const SizedBox(
+                  height: 24,
+                ), // Add bottom padding for better scrolling
               ],
             ),
           ),
@@ -118,22 +120,19 @@ class _ExplorePageState extends State<ExplorePage> {
   Widget _buildDailyChallengeCard() {
     final streakColor = _getStreakColor();
     final streakMessage = _getStreakMessage();
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            streakColor,
-            streakColor.withOpacity(0.8),
-          ],
+          colors: [streakColor, streakColor.withValues(alpha: 0.8)],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: streakColor.withOpacity(0.3),
+            color: streakColor.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -151,7 +150,9 @@ class _ExplorePageState extends State<ExplorePage> {
                     Row(
                       children: [
                         Icon(
-                          _todayCompleted ? Icons.local_fire_department : Icons.local_fire_department_outlined,
+                          _todayCompleted
+                              ? Icons.local_fire_department
+                              : Icons.local_fire_department_outlined,
                           color: Colors.white,
                           size: 24,
                         ),
@@ -171,7 +172,7 @@ class _ExplorePageState extends State<ExplorePage> {
                       streakMessage,
                       style: GoogleFonts.lato(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ],
@@ -191,7 +192,7 @@ class _ExplorePageState extends State<ExplorePage> {
                     'days',
                     style: GoogleFonts.lato(
                       fontSize: 12,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -209,7 +210,7 @@ class _ExplorePageState extends State<ExplorePage> {
                       'Longest Streak',
                       style: GoogleFonts.lato(
                         fontSize: 12,
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                       ),
                     ),
                     Text(
@@ -224,9 +225,15 @@ class _ExplorePageState extends State<ExplorePage> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: _todayCompleted ? Colors.white.withOpacity(0.2) : Colors.white.withOpacity(0.1),
+                  color:
+                      _todayCompleted
+                          ? Colors.white.withValues(alpha: 0.2)
+                          : Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -274,7 +281,11 @@ class _ExplorePageState extends State<ExplorePage> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add_circle, color: Colors.green, size: 30),
+                  icon: const Icon(
+                    Icons.add_circle,
+                    color: Colors.green,
+                    size: 30,
+                  ),
                   onPressed: () => _showAddTaskDialog(taskProvider),
                 ),
               ],
@@ -286,23 +297,25 @@ class _ExplorePageState extends State<ExplorePage> {
                 color: cardColor,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: taskProvider.tasks.isEmpty
-                  ? const Center(
-                      child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 24.0),
-                      child: Text('No tasks yet. Add one!'),
-                    ))
-                  : ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: taskProvider.tasks.length,
-                      itemBuilder: (context, index) {
-                        final task = taskProvider.tasks[index];
-                        return _buildTaskItem(task, index, taskProvider);
-                      },
-                      separatorBuilder: (context, index) =>
-                          const Divider(height: 24),
-                    ),
+              child:
+                  taskProvider.tasks.isEmpty
+                      ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24.0),
+                          child: Text('No tasks yet. Add one!'),
+                        ),
+                      )
+                      : ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: taskProvider.tasks.length,
+                        itemBuilder: (context, index) {
+                          final task = taskProvider.tasks[index];
+                          return _buildTaskItem(task, index, taskProvider);
+                        },
+                        separatorBuilder:
+                            (context, index) => const Divider(height: 24),
+                      ),
             ),
           ],
         );
@@ -314,14 +327,15 @@ class _ExplorePageState extends State<ExplorePage> {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDarkMode ? Colors.white : Colors.black87;
     final completedTextColor = isDarkMode ? Colors.grey[400] : Colors.grey;
-    
+
     return InkWell(
       onTap: () => taskProvider.toggleTaskCompletion(index),
       child: Row(
         children: [
           Checkbox(
             value: task.isCompleted,
-            onChanged: (bool? value) => taskProvider.toggleTaskCompletion(index),
+            onChanged:
+                (bool? value) => taskProvider.toggleTaskCompletion(index),
             activeColor: Colors.green,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(4),
@@ -332,9 +346,10 @@ class _ExplorePageState extends State<ExplorePage> {
               task.title,
               style: GoogleFonts.lato(
                 fontSize: 16,
-                decoration: task.isCompleted
-                    ? TextDecoration.lineThrough
-                    : TextDecoration.none,
+                decoration:
+                    task.isCompleted
+                        ? TextDecoration.lineThrough
+                        : TextDecoration.none,
                 color: task.isCompleted ? completedTextColor : textColor,
               ),
             ),
@@ -350,8 +365,9 @@ class _ExplorePageState extends State<ExplorePage> {
 
   Widget _buildFeaturesCard() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDarkMode ? Colors.purple.shade900 : Colors.purple.shade700;
-    
+    final cardColor =
+        isDarkMode ? Colors.purple.shade900 : Colors.purple.shade700;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -388,10 +404,7 @@ class _ExplorePageState extends State<ExplorePage> {
           const SizedBox(width: 16),
           Text(
             text,
-            style: GoogleFonts.lato(
-              fontSize: 16,
-              color: Colors.white,
-            ),
+            style: GoogleFonts.lato(fontSize: 16, color: Colors.white),
           ),
         ],
       ),

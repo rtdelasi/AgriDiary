@@ -29,7 +29,7 @@ class UserProfileProvider with ChangeNotifier {
   }
 
   void updateProfilePhoto(String newPhotoPath) {
-    _photoPath = newPhotoPath;
+    _photoPath = newPhotoPath.isEmpty ? null : newPhotoPath;
     _saveProfile();
     notifyListeners();
   }
@@ -48,6 +48,8 @@ class UserProfileProvider with ChangeNotifier {
     await prefs.setString(_emailKey, _email);
     if (_photoPath != null) {
       await prefs.setString(_photoPathKey, _photoPath!);
+    } else {
+      await prefs.remove(_photoPathKey);
     }
   }
 } 

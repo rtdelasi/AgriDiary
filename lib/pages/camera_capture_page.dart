@@ -56,7 +56,7 @@ class _CameraCapturePageState extends State<CameraCapturePage> {
       final image = await _controller.takePicture();
       await image.saveTo(filePath);
 
-      // Save as note
+      // Save as note with picked image
       final note = await _notesService.createPhotoNote(filePath);
       widget.onImageCaptured(note);
       
@@ -64,9 +64,7 @@ class _CameraCapturePageState extends State<CameraCapturePage> {
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error capturing image: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error capturing image: $e')));
     } finally {
       setState(() => _isCapturing = false);
     }

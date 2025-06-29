@@ -99,9 +99,9 @@ class _InsightsPageState extends State<InsightsPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.green.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green.withOpacity(0.3)),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -224,8 +224,8 @@ class _InsightsPageState extends State<InsightsPage> {
       gridData: FlGridData(
         show: true,
         drawVerticalLine: true,
-        getDrawingHorizontalLine: (value) => FlLine(color: Colors.grey.withOpacity(0.3)),
-        getDrawingVerticalLine: (value) => FlLine(color: Colors.grey.withOpacity(0.3)),
+        getDrawingHorizontalLine: (value) => FlLine(color: Colors.grey.withValues(alpha: 0.3)),
+        getDrawingVerticalLine: (value) => FlLine(color: Colors.grey.withValues(alpha: 0.3)),
       ),
       titlesData: FlTitlesData(
         show: true,
@@ -529,9 +529,9 @@ class _InsightsPageState extends State<InsightsPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
+                color: Colors.orange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -624,7 +624,7 @@ class _InsightsPageState extends State<InsightsPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: changeColor.withOpacity(0.1),
+                  color: changeColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
