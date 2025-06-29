@@ -43,6 +43,32 @@ class NotesService {
     await prefs.setStringList(_notesKey, notes);
   }
 
+  // Update a note's title
+  Future<void> updateNoteTitle(String noteId, String newTitle) async {
+    final prefs = await SharedPreferences.getInstance();
+    final notesJson = prefs.getStringList(_notesKey) ?? [];
+    
+    final notes = notesJson
+        .map((json) => Note.fromJson(jsonDecode(json)))
+        .map((note) {
+          if (note.id == noteId) {
+            return Note(
+              id: note.id,
+              title: newTitle,
+              filePath: note.filePath,
+              date: note.date,
+              duration: note.duration,
+              type: note.type,
+            );
+          }
+          return note;
+        })
+        .map((note) => jsonEncode(note.toJson()))
+        .toList();
+    
+    await prefs.setStringList(_notesKey, notes);
+  }
+
   // Save audio file to app documents directory
   Future<String> saveAudioFile(String tempPath) async {
     final documentsDir = await getApplicationDocumentsDirectory();

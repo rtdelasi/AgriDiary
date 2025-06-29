@@ -142,6 +142,63 @@ class _NotesPageState extends State<NotesPage> {
     }
   }
 
+  Future<void> _renameNote(Note note) async {
+    final TextEditingController titleController = TextEditingController(text: note.title);
+    
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rename Note'),
+        content: TextField(
+          controller: titleController,
+          decoration: const InputDecoration(
+            labelText: 'Note Title',
+            hintText: 'Enter new title',
+          ),
+          autofocus: true,
+          onSubmitted: (value) {
+            if (value.trim().isNotEmpty) {
+              Navigator.of(context).pop(value.trim());
+            }
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final newTitle = titleController.text.trim();
+              if (newTitle.isNotEmpty) {
+                Navigator.of(context).pop(newTitle);
+              }
+            },
+            child: const Text('Rename'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty && result != note.title) {
+      try {
+        await _notesService.updateNoteTitle(note.id, result);
+        await _loadNotes();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Note renamed successfully')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error renaming note: $e')),
+          );
+        }
+      }
+    }
+  }
+
   String _formatDuration(Duration? duration) {
     if (duration == null) return 'Unknown duration';
     final minutes = duration.inMinutes;
@@ -163,14 +220,27 @@ class _NotesPageState extends State<NotesPage> {
     }
   }
 
+  Map<String, List<Note>> _groupNotesByDay(List<Note> notes) {
+    final Map<String, List<Note>> grouped = {};
+    for (final note in notes) {
+      final dayKey = DateFormat('yyyy-MM-dd').format(note.date);
+      grouped.putIfAbsent(dayKey, () => []).add(note);
+    }
+    return grouped;
+  }
+
   Widget _buildNoteCard(Note note) {
     final isPlaying = _currentlyPlayingId == note.id;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDarkMode ? Colors.grey[800] : Colors.white;
+    final textColor = isDarkMode ? Colors.white : Colors.black87;
     
     return Card(
       margin: const EdgeInsets.symmetric(
         horizontal: 16,
         vertical: 4,
       ),
+      color: cardColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -188,16 +258,25 @@ class _NotesPageState extends State<NotesPage> {
             ),
             title: Text(
               note.title,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_formatDate(note.date)),
+                Text(
+                  _formatDate(note.date),
+                  style: TextStyle(color: isDarkMode ? Colors.grey[300] : Colors.grey[600]),
+                ),
                 if (note.duration != null)
                   Text(
                     'Duration: ${_formatDuration(note.duration)}',
-                    style: const TextStyle(fontSize: 12),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
+                    ),
                   ),
               ],
             ),
@@ -212,6 +291,10 @@ class _NotesPageState extends State<NotesPage> {
                     ),
                     onPressed: () => _playAudio(note),
                   ),
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  onPressed: () => _renameNote(note),
+                ),
                 IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: () => _showDeleteDialog(note),
@@ -317,14 +400,35 @@ class _NotesPageState extends State<NotesPage> {
                     ],
                   ),
                 )
-              : ListView.builder(
-                  itemCount: _notes.length,
-                  itemBuilder: (context, index) {
-                    final note = _notes[index];
-                    return _buildNoteCard(note);
-                  },
-                ),
+              : _buildGroupedNotesList(),
     );
+  }
+
+  Widget _buildGroupedNotesList() {
+    final grouped = _groupNotesByDay(_notes);
+    final sortedKeys = grouped.keys.toList()
+      ..sort((a, b) => b.compareTo(a)); // Descending by date
+    return ListView(
+      children: [
+        for (final dayKey in sortedKeys)
+          ExpansionTile(
+            title: Text(_formatDayHeader(dayKey)),
+            children: grouped[dayKey]!
+                .map((note) => _buildNoteCard(note))
+                .toList(),
+          ),
+      ],
+    );
+  }
+
+  String _formatDayHeader(String dayKey) {
+    final date = DateTime.parse(dayKey);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    if (date == today) return 'Today';
+    if (date == yesterday) return 'Yesterday';
+    return DateFormat('MMM dd, yyyy').format(date);
   }
 
   void _showDeleteDialog(Note note) {

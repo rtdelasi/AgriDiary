@@ -15,7 +15,10 @@ class UserProfileProvider with ChangeNotifier {
   String? get photoPath => _photoPath;
 
   UserProfileProvider() {
-    _loadProfile();
+    // Defer loading to prevent blocking initialization
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadProfile();
+    });
   }
 
   void updateProfile(String newName, String newEmail) {

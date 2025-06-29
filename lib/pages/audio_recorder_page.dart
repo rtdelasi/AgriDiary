@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import '../services/notes_service.dart';
 import '../models/note.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class AudioRecorderPage extends StatefulWidget {
   final Function(Note) onSave;
@@ -18,11 +19,14 @@ class AudioRecorderPage extends StatefulWidget {
 class _AudioRecorderPageState extends State<AudioRecorderPage> {
   final AudioRecorder _audioRecorder = AudioRecorder();
   final NotesService _notesService = NotesService();
+  final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isRecording = false;
   String? _audioPath;
   Duration _recordDuration = Duration.zero;
   Timer? _timer;
   bool _isSaving = false;
+  bool _isPlayback = false;
+  bool _isPlaying = false;
 
   @override
   void initState() {
@@ -34,6 +38,7 @@ class _AudioRecorderPageState extends State<AudioRecorderPage> {
   void dispose() {
     _timer?.cancel();
     _audioRecorder.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -93,6 +98,7 @@ class _AudioRecorderPageState extends State<AudioRecorderPage> {
       setState(() {
         _isRecording = false;
         if (path != null) _audioPath = path;
+        _isPlayback = _audioPath != null;
       });
     } catch (e) {
       if (mounted) {
@@ -101,6 +107,29 @@ class _AudioRecorderPageState extends State<AudioRecorderPage> {
         ).showSnackBar(SnackBar(content: Text('Error stopping recording: $e')));
       }
     }
+  }
+
+  Future<void> _playAudio() async {
+    if (_audioPath == null) return;
+    setState(() => _isPlaying = true);
+    await _audioPlayer.play(DeviceFileSource(_audioPath!));
+    _audioPlayer.onPlayerComplete.listen((_) {
+      if (mounted) setState(() => _isPlaying = false);
+    });
+  }
+
+  Future<void> _stopAudio() async {
+    await _audioPlayer.stop();
+    setState(() => _isPlaying = false);
+  }
+
+  void _resetRecording() {
+    setState(() {
+      _audioPath = null;
+      _recordDuration = Duration.zero;
+      _isPlayback = false;
+      _isPlaying = false;
+    });
   }
 
   Future<void> _saveRecording() async {
@@ -134,26 +163,23 @@ class _AudioRecorderPageState extends State<AudioRecorderPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Record Audio'),
-        actions: [
-          if (_audioPath != null && !_isRecording && !_isSaving)
-            IconButton(
-              icon: const Icon(Icons.save),
-              onPressed: _saveRecording,
-            ),
-        ],
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              _isRecording ? Icons.mic : Icons.mic_none,
+              _isRecording ? Icons.mic : (_isPlayback ? Icons.play_circle : Icons.mic_none),
               size: 80,
-              color: _isRecording ? Colors.red : Colors.grey,
+              color: _isRecording ? Colors.red : (_isPlayback ? Colors.green : Colors.grey),
             ),
             const SizedBox(height: 20),
             Text(
-              _isRecording ? 'Recording...' : 'Ready to record',
+              _isRecording
+                  ? 'Recording...'
+                  : _isPlayback
+                      ? 'Playback'
+                      : 'Ready to record',
               style: const TextStyle(fontSize: 20),
             ),
             const SizedBox(height: 10),
@@ -169,6 +195,38 @@ class _AudioRecorderPageState extends State<AudioRecorderPage> {
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
                   Text('Saving note...'),
+                ],
+              )
+            else if (_isPlayback && _audioPath != null)
+              Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: Icon(_isPlaying ? Icons.stop : Icons.play_arrow, size: 40),
+                        onPressed: _isPlaying ? _stopAudio : _playAudio,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.save),
+                        label: const Text('Save'),
+                        onPressed: _saveRecording,
+                      ),
+                      const SizedBox(width: 24),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.replay),
+                        label: const Text('Record Again'),
+                        onPressed: _resetRecording,
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                      ),
+                    ],
+                  ),
                 ],
               )
             else

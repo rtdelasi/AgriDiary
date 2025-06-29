@@ -12,10 +12,11 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = "11"
     }
 
     defaultConfig {
@@ -24,11 +25,23 @@ android {
         targetSdk = flutter.targetSdkVersion.toInt()
         versionCode = flutter.versionCode.toInt()
         versionName = flutter.versionName
+        multiDexEnabled = true
+        
+        // Performance optimizations
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
     }
 
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+        debug {
+            isDebuggable = true
+            isMinifyEnabled = false
         }
     }
 }
@@ -38,10 +51,7 @@ flutter {
 }
 
 dependencies {
-    // Removed: implementation(platform("com.google.firebase:firebase-bom:32.7.2"))
-    // Removed: implementation("com.google.firebase:firebase-analytics")
-    // Removed: implementation("com.google.firebase:firebase-auth-ktx")
-    // Removed: implementation("com.google.android.gms:play-services-auth:20.7.0")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
 tasks.withType<JavaCompile> {

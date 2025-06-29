@@ -1,7 +1,6 @@
 import 'package:agridiary/pages/camera_capture_page.dart';
 import 'package:agridiary/pages/explore_page.dart';
 import 'package:agridiary/pages/insights_page.dart';
-import 'package:agridiary/pages/marketplace_page.dart';
 import 'package:agridiary/pages/notes_page.dart';
 import 'package:agridiary/pages/profile_page.dart';
 import 'package:agridiary/pages/audio_recorder_page.dart';
@@ -13,6 +12,7 @@ import 'package:iconly/iconly.dart';
 import 'package:provider/provider.dart';
 import '../models/note.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/weather_widget.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -28,11 +28,21 @@ class _HomePageState extends State<HomePage> {
     const ExplorePage(),
     const NotesPage(),
     const InsightsPage(),
-    const MarketplacePage(),
     const ProfilePage(),
   ];
 
   final ValueNotifier<bool> isDialOpen = ValueNotifier<bool>(false);
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Good morning';
+    } else if (hour < 17) {
+      return 'Good afternoon';
+    } else {
+      return 'Good evening';
+    }
+  }
 
   void _onDrawerNavigation(int index) {
     setState(() {
@@ -81,7 +91,7 @@ class _HomePageState extends State<HomePage> {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     Text(
-                      'Enjoy our services',
+                      _getGreeting(),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -155,7 +165,12 @@ class _HomePageState extends State<HomePage> {
         onOpen: () => isDialOpen.value = true,
         onClose: () => isDialOpen.value = false,
       ),
-      body: _pages[_selectedIndex],
+      body: Column(
+        children: [
+          if (_selectedIndex == 0) const WeatherWidget(),
+          Expanded(child: _pages[_selectedIndex]),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) {
@@ -179,11 +194,6 @@ class _HomePageState extends State<HomePage> {
             icon: Icon(Icons.insights_outlined),
             activeIcon: Icon(Icons.insights),
             label: 'Insights',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.store_outlined),
-            activeIcon: Icon(Icons.store),
-            label: 'Marketplace',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),

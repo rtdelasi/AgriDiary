@@ -10,7 +10,10 @@ class ThemeProvider with ChangeNotifier {
   bool get isDarkMode => _themeMode == ThemeMode.dark;
 
   ThemeProvider() {
-    _loadThemeMode();
+    // Defer loading to prevent blocking initialization
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadThemeMode();
+    });
   }
 
   void toggleTheme(bool isOn) {
