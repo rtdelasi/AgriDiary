@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../services/notification_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class WeatherWidget extends StatefulWidget {
@@ -21,15 +21,15 @@ class _WeatherWidgetState extends State<WeatherWidget> {
   String? _error;
   static const String _apiKey = '8e05be75a960415bb11180128252406';
   String? _lastWeatherDesc;
-  late FlutterLocalNotificationsPlugin _notificationsPlugin;
+  final NotificationService _notificationService = NotificationService();
 
   @override
   void initState() {
     super.initState();
-    _notificationsPlugin = FlutterLocalNotificationsPlugin();
+    // Initialize notification service
+    _notificationService.initialize();
     // Defer heavy operations to prevent blocking UI
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initNotifications();
       _fetchWeather();
     });
   }
@@ -38,34 +38,6 @@ class _WeatherWidgetState extends State<WeatherWidget> {
   void dispose() {
     // Clean up any resources if needed
     super.dispose();
-  }
-
-  Future<void> _initNotifications() async {
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const ios = DarwinInitializationSettings();
-    const settings = InitializationSettings(android: android, iOS: ios);
-    await _notificationsPlugin.initialize(settings);
-  }
-
-  Future<void> _showWeatherAlert(String message) async {
-    const androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'weather_channel',
-      'Weather Alerts',
-      importance: Importance.max,
-      priority: Priority.high,
-      ticker: 'ticker',
-    );
-    const platformChannelSpecifics = NotificationDetails(
-      android: androidPlatformChannelSpecifics,
-      iOS: DarwinNotificationDetails(),
-    );
-    await _notificationsPlugin.show(
-      0,
-      'Weather Alert',
-      message,
-      platformChannelSpecifics,
-      payload: 'weather_alert',
-    );
   }
 
   Future<void> _checkLocationPermission() async {
@@ -148,9 +120,9 @@ class _WeatherWidgetState extends State<WeatherWidget> {
         final icon = current['condition']['icon'];
         final locationName = location['name'];
 
-        // Alert if weather description changes
+        // Check for weather changes and send notifications
         if (_lastWeatherDesc != null && _lastWeatherDesc != desc) {
-          await _showWeatherAlert('Weather changed: $desc');
+          await _handleWeatherChange(desc, temp);
         }
 
         if (mounted) {
@@ -164,15 +136,9 @@ class _WeatherWidgetState extends State<WeatherWidget> {
           });
         }
       } else {
-        String apiError = 'HTTP ${response.statusCode}';
-        try {
-          final errorData = json.decode(response.body);
-          apiError = errorData['error']['message'] ?? apiError;
-        } catch (_) {}
-
         if (mounted) {
           setState(() {
-            _error = 'API error: $apiError';
+            _error = 'Failed to fetch weather data';
             _loading = false;
           });
         }
@@ -180,11 +146,55 @@ class _WeatherWidgetState extends State<WeatherWidget> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = 'Failed to fetch weather data: ${e.toString()}';
+          _error = 'Error fetching weather: ${e.toString()}';
           _loading = false;
         });
       }
     }
+  }
+
+  Future<void> _handleWeatherChange(String newWeather, double? temperature) async {
+    String alertTitle = 'Weather Change Alert';
+    String alertMessage = 'Weather has changed to: $newWeather';
+    
+    // Determine weather type for notification
+    String weatherType = 'general';
+    
+    if (newWeather.toLowerCase().contains('rain') || 
+        newWeather.toLowerCase().contains('shower') ||
+        newWeather.toLowerCase().contains('drizzle')) {
+      weatherType = 'rain';
+      alertTitle = 'Rain Alert';
+      alertMessage = 'Rain detected in your area. Consider protecting sensitive crops and adjusting irrigation.';
+    } else if (newWeather.toLowerCase().contains('storm') || 
+               newWeather.toLowerCase().contains('thunder')) {
+      weatherType = 'storm';
+      alertTitle = 'Storm Alert';
+      alertMessage = 'Storm conditions detected. Secure equipment and protect crops from potential damage.';
+    } else if (newWeather.toLowerCase().contains('snow') || 
+               newWeather.toLowerCase().contains('frost')) {
+      weatherType = 'cold';
+      alertTitle = 'Cold Weather Alert';
+      alertMessage = 'Cold weather detected. Protect frost-sensitive crops and consider covering plants.';
+    } else if (newWeather.toLowerCase().contains('sunny') || 
+               newWeather.toLowerCase().contains('clear')) {
+      weatherType = 'sunny';
+      alertTitle = 'Clear Weather Alert';
+      alertMessage = 'Clear weather conditions. Good time for outdoor farming activities and crop monitoring.';
+    } else if (newWeather.toLowerCase().contains('cloudy') || 
+               newWeather.toLowerCase().contains('overcast')) {
+      weatherType = 'cloudy';
+      alertTitle = 'Cloudy Weather Alert';
+      alertMessage = 'Cloudy conditions detected. Monitor light-sensitive crops and adjust watering schedules.';
+    }
+
+    // Add temperature information if available
+    if (temperature != null) {
+      alertMessage += ' Temperature: ${temperature.toStringAsFixed(1)}°C';
+    }
+
+    // Send notification
+    await _notificationService.showWeatherAlert(alertTitle, alertMessage, weatherType);
   }
 
   Widget _buildLoadingWidget() {

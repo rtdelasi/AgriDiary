@@ -7,6 +7,7 @@ import '../providers/user_profile_provider.dart';
 import 'edit_profile_page.dart';
 import 'image_preview_page.dart';
 import 'permission_settings_page.dart';
+import 'notification_settings_page.dart';
 import 'help_page.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -238,7 +239,14 @@ class _ProfilePageState extends State<ProfilePage> {
             context,
             icon: Icons.notifications_outlined,
             title: 'Notifications',
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationSettingsPage(),
+                ),
+              );
+            },
           ),
           const Divider(),
           _buildMenuItem(

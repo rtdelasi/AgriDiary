@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/permission_service.dart';
 import 'home_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PermissionRequestPage extends StatefulWidget {
   const PermissionRequestPage({super.key});
@@ -26,15 +27,22 @@ class _PermissionRequestPageState extends State<PermissionRequestPage> {
     });
     
     if (allGranted && mounted) {
+      await _markPermissionsRequested();
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const HomePage()),
       );
     }
   }
 
+  Future<void> _markPermissionsRequested() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('permissions_requested', true);
+  }
+
   Future<void> _requestAllPermissions() async {
     try {
       await _permissionService.requestAllPermissions();
+      await _markPermissionsRequested();
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const HomePage()),
@@ -46,6 +54,15 @@ class _PermissionRequestPageState extends State<PermissionRequestPage> {
           SnackBar(content: Text('Error: $e')),
         );
       }
+    }
+  }
+
+  Future<void> _continueWithoutPermissions() async {
+    await _markPermissionsRequested();
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
     }
   }
 
@@ -73,11 +90,7 @@ class _PermissionRequestPageState extends State<PermissionRequestPage> {
                   ),
                   const SizedBox(height: 10),
                   TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (context) => const HomePage()),
-                      );
-                    },
+                    onPressed: _continueWithoutPermissions,
                     child: const Text('Continue Without Permissions'),
                   ),
                 ],

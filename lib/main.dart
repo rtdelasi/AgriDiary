@@ -5,12 +5,18 @@ import 'providers/theme_provider.dart';
 import 'providers/user_profile_provider.dart';
 import 'providers/permission_provider.dart';
 import 'services/permission_service.dart';
+import 'services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize notification service
+  final notificationService = NotificationService();
+  await notificationService.initialize();
   
   runApp(
     MultiProvider(
@@ -33,8 +39,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  bool _isLoading = true;
   bool _permissionsGranted = false;
+  bool _permissionsChecked = false;
 
   @override
   void initState() {
@@ -43,13 +49,25 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _checkPermissions() async {
-    final permissionService = PermissionService();
-    final allGranted = await permissionService.areAllPermissionsGranted();
+    final prefs = await SharedPreferences.getInstance();
+    final permissionsRequested = prefs.getBool('permissions_requested') ?? false;
     
-    setState(() {
-      _permissionsGranted = allGranted;
-      _isLoading = false;
-    });
+    if (permissionsRequested) {
+      // If permissions were already requested, just check current status
+      final permissionService = PermissionService();
+      final allGranted = await permissionService.areAllPermissionsGranted();
+      
+      setState(() {
+        _permissionsGranted = allGranted;
+        _permissionsChecked = true;
+      });
+    } else {
+      // First time launching app, show permission request page
+      setState(() {
+        _permissionsGranted = false;
+        _permissionsChecked = true;
+      });
+    }
   }
 
   @override
@@ -104,52 +122,11 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
           themeMode: themeProvider.themeMode,
-          home: _isLoading
-              ? _buildLoadingScreen()
-              : _permissionsGranted
-                  ? const HomePage()
-                  : const PermissionRequestPage(),
+          home: _permissionsChecked
+              ? (_permissionsGranted ? const HomePage() : const PermissionRequestPage())
+              : const HomePage(), // Show home page while checking permissions
         );
       },
-    );
-  }
-
-  Widget _buildLoadingScreen() {
-    return Scaffold(
-      backgroundColor: Colors.grey[900],
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.agriculture,
-              size: 80,
-              color: Colors.green,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'AgriDiary',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 16),
-            CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Initializing...',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white.withValues(alpha: 0.7),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

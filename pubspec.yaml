@@ -41,6 +41,7 @@ dependencies:
   http: ^1.2.1
   geolocator: ^14.0.1
   flutter_local_notifications: ^19.3.0
+  timezone: ^0.10.0
   # Removed: firebase_core: ^2.24.2
   # Removed: firebase_auth: ^4.15.3
   

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/crop_info_service.dart';
+import '../services/notification_service.dart';
 
 class InsightsPage extends StatefulWidget {
   const InsightsPage({super.key});
@@ -12,6 +14,79 @@ class InsightsPage extends StatefulWidget {
 class _InsightsPageState extends State<InsightsPage> {
   int _selectedCropIndex = 0;
   final List<String> _crops = ['Corn', 'Wheat', 'Soybeans', 'Rice', 'Cotton'];
+  final CropInfoService _cropInfoService = CropInfoService();
+  final NotificationService _notificationService = NotificationService();
+  
+  Map<String, String> _currentCropInfo = {};
+  bool _isLoadingCropInfo = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _notificationService.initialize();
+    _loadCropInfo(_crops[_selectedCropIndex]);
+    _scheduleCropReminder();
+  }
+
+  Future<void> _loadCropInfo(String cropName) async {
+    setState(() {
+      _isLoadingCropInfo = true;
+    });
+
+    try {
+      final cropInfo = await _cropInfoService.getCropInfo(cropName);
+      setState(() {
+        _currentCropInfo = cropInfo;
+        _isLoadingCropInfo = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingCropInfo = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading crop information: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _scheduleCropReminder() async {
+    try {
+      await _notificationService.scheduleCropReminder();
+    } catch (e) {
+      print('Error scheduling crop reminder: $e');
+    }
+  }
+
+  Future<void> _sendPestAlert() async {
+    try {
+      final cropName = _crops[_selectedCropIndex];
+      await _notificationService.showPestAlert(
+        'Pest Alert: $cropName',
+        'Potential pest activity detected in your $cropName field. Please inspect your crops and consider preventive measures.',
+        cropName.toLowerCase(),
+      );
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pest alert notification sent!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error sending pest alert: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -325,6 +400,13 @@ class _InsightsPageState extends State<InsightsPage> {
                     color: textColor,
                   ),
                 ),
+                const Spacer(),
+                if (_isLoadingCropInfo)
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
               ],
             ),
             const SizedBox(height: 16),
@@ -339,13 +421,59 @@ class _InsightsPageState extends State<InsightsPage> {
                 setState(() {
                   _selectedCropIndex = _crops.indexOf(value!);
                 });
+                _loadCropInfo(value!);
               },
             ),
             const SizedBox(height: 16),
-            _buildCropInsight('Optimal Planting Time', 'Next 2 weeks', Icons.calendar_today, Colors.blue),
-            _buildCropInsight('Water Requirements', 'Moderate (25mm/week)', Icons.water_drop, Colors.cyan),
-            _buildCropInsight('Fertilizer Needs', 'Nitrogen-rich (NPK 20-10-10)', Icons.grass, Colors.green),
-            _buildCropInsight('Pest Risk', 'Low - Monitor for aphids', Icons.bug_report, Colors.orange),
+            _buildCropInsight(
+              'Optimal Planting Time', 
+              _currentCropInfo['planting_time'] ?? 'Loading...', 
+              Icons.calendar_today, 
+              Colors.blue
+            ),
+            _buildCropInsight(
+              'Water Requirements', 
+              _currentCropInfo['water_requirements'] ?? 'Loading...', 
+              Icons.water_drop, 
+              Colors.cyan
+            ),
+            _buildCropInsight(
+              'Fertilizer Needs', 
+              _currentCropInfo['fertilizer_needs'] ?? 'Loading...', 
+              Icons.grass, 
+              Colors.green
+            ),
+            _buildCropInsight(
+              'Pest Risk', 
+              _currentCropInfo['pest_risk'] ?? 'Loading...', 
+              Icons.bug_report, 
+              Colors.orange
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.blue, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Information sourced from agricultural databases and farming resources',
+                      style: TextStyle(
+                        color: Colors.blue[700],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -523,6 +651,18 @@ class _InsightsPageState extends State<InsightsPage> {
                     color: textColor,
                   ),
                 ),
+                const Spacer(),
+                ElevatedButton.icon(
+                  onPressed: _sendPestAlert,
+                  icon: const Icon(Icons.notifications, size: 16),
+                  label: const Text('Send Alert'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -554,6 +694,23 @@ class _InsightsPageState extends State<InsightsPage> {
                   Text(
                     'Monitor corn fields for aphid infestation. Consider preventive treatment if population exceeds threshold.',
                     style: TextStyle(color: Colors.orange[800]),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.orange[700], size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Tap "Send Alert" to notify about pest activity',
+                          style: TextStyle(
+                            color: Colors.orange[700],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
