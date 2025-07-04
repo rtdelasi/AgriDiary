@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:agridiary/models/task.dart';
 import 'package:provider/provider.dart';
 import 'package:agridiary/providers/task_provider.dart';
+import 'package:page_view_indicators/circle_page_indicator.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -13,8 +14,37 @@ class ExplorePage extends StatefulWidget {
 
 class _ExplorePageState extends State<ExplorePage> {
   final int _currentStreak = 7; // Example streak count
-  final int _longestStreak = 12; // Example longest streak
-  bool _todayCompleted = false; // Track if user has been active today
+  final PageController _cropPageController = PageController();
+  final ValueNotifier<int> _currentCropPageNotifier = ValueNotifier<int>(0);
+
+  // Mocked best-selling crops data
+  final List<Map<String, String>> _bestSellingCrops = [
+    {
+      'name': 'Tomato',
+      'image': 'assets/images/tomato.jpg',
+      'desc': 'High demand in markets, easy to grow in most climates.',
+    },
+    {
+      'name': 'Maize',
+      'image': 'assets/images/maize.jpg',
+      'desc': 'Staple crop, widely grown and consumed.',
+    },
+    {
+      'name': 'Rice',
+      'image': 'assets/images/rice.jpg',
+      'desc': 'Essential food crop, best-selling in many regions.',
+    },
+    {
+      'name': 'Wheat',
+      'image': 'assets/images/wheat.jpg',
+      'desc': 'Popular for bread and flour, high market value.',
+    },
+    {
+      'name': 'Potato',
+      'image': 'assets/images/potatoes.jpg',
+      'desc': 'Versatile crop, used in many dishes worldwide.',
+    },
+  ];
 
   @override
   void initState() {
@@ -22,10 +52,16 @@ class _ExplorePageState extends State<ExplorePage> {
     _checkTodayActivity();
   }
 
+  @override
+  void dispose() {
+    _cropPageController.dispose();
+    _currentCropPageNotifier.dispose();
+    super.dispose();
+  }
+
   void _checkTodayActivity() {
     // Check if user has been active today (opened app, completed tasks, etc.)
     // For now, we'll simulate this with a random check
-    _todayCompleted = DateTime.now().hour > 12; // Simulate afternoon activity
   }
 
   void _showAddTaskDialog(TaskProvider taskProvider) {
@@ -62,28 +98,6 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 
-  String _getStreakMessage() {
-    if (_currentStreak == 0) {
-      return 'Start your farming journey today!';
-    } else if (_currentStreak == 1) {
-      return 'Great start! Keep it going!';
-    } else if (_currentStreak < 7) {
-      return 'Building momentum! ${7 - _currentStreak} more days to a week!';
-    } else if (_currentStreak < 30) {
-      return 'Amazing consistency! You\'re on fire! 🔥';
-    } else {
-      return 'Legendary farmer! You\'re unstoppable! 💪';
-    }
-  }
-
-  Color _getStreakColor() {
-    if (_currentStreak == 0) return Colors.grey.shade600;
-    if (_currentStreak < 3) return Colors.orange.shade600;
-    if (_currentStreak < 7) return Colors.blue.shade600;
-    if (_currentStreak < 30) return Colors.purple.shade600;
-    return Colors.red.shade600; // Legendary streak
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -94,82 +108,151 @@ class _ExplorePageState extends State<ExplorePage> {
     return Scaffold(
       backgroundColor: backgroundColor,
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildDailyChallengeCard(),
-                const SizedBox(height: 24),
-                _buildMyPlansSection(cardColor, textColor),
-                const SizedBox(height: 24),
-                _buildFeaturesCard(),
-                const SizedBox(
-                  height: 24,
-                ), // Add bottom padding for better scrolling
-              ],
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.all(16.0),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _buildFarmerCard(),
+                  const SizedBox(height: 24),
+                  _buildMyPlansSection(cardColor, textColor),
+                  const SizedBox(height: 24),
+                  _buildWeatherSection(),
+                  const SizedBox(height: 24),
+                  _buildBestSellingCropsCarousel(cardColor, textColor),
+                ]),
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildDailyChallengeCard() {
-    final streakColor = _getStreakColor();
-    final streakMessage = _getStreakMessage();
-
+  Widget _buildFarmerCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      height: 200,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [streakColor, streakColor.withValues(alpha: 0.8)],
-        ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: streakColor.withValues(alpha: 0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            // Background Image
+            Positioned.fill(
+              child: Image.asset('assets/images/farmer.jpg', fit: BoxFit.cover),
+            ),
+            // Gradient Overlay
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.3),
+                      Colors.black.withValues(alpha: 0.7),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Content
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(
-                          _todayCompleted
-                              ? Icons.local_fire_department
-                              : Icons.local_fire_department_outlined,
-                          color: Colors.white,
-                          size: 24,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withValues(alpha: 0.9),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.agriculture,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Active Farmer',
+                                style: GoogleFonts.lato(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Activity Streak',
-                          style: GoogleFonts.lato(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.local_fire_department,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '$_currentStreak days',
+                                style: GoogleFonts.lato(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     Text(
-                      streakMessage,
+                      'Welcome to AgriDiary',
+                      style: GoogleFonts.lato(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Your digital farming companion',
                       style: GoogleFonts.lato(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.9),
@@ -178,87 +261,9 @@ class _ExplorePageState extends State<ExplorePage> {
                   ],
                 ),
               ),
-              Column(
-                children: [
-                  Text(
-                    '$_currentStreak',
-                    style: GoogleFonts.lato(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Text(
-                    'days',
-                    style: GoogleFonts.lato(
-                      fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.8),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Longest Streak',
-                      style: GoogleFonts.lato(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.8),
-                      ),
-                    ),
-                    Text(
-                      '$_longestStreak days',
-                      style: GoogleFonts.lato(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color:
-                      _todayCompleted
-                          ? Colors.white.withValues(alpha: 0.2)
-                          : Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _todayCompleted ? Icons.check_circle : Icons.schedule,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      _todayCompleted ? 'Completed' : 'Pending',
-                      style: GoogleFonts.lato(
-                        fontSize: 12,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -272,38 +277,92 @@ class _ExplorePageState extends State<ExplorePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'My Plans',
-                  style: GoogleFonts.lato(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'My Plans',
+                      style: GoogleFonts.lato(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
+                    ),
+                    Text(
+                      taskProvider.getCurrentDate(),
+                      style: GoogleFonts.lato(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.add_circle,
-                    color: Colors.green,
-                    size: 30,
-                  ),
-                  onPressed: () => _showAddTaskDialog(taskProvider),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.refresh,
+                        color: Colors.orange,
+                        size: 24,
+                      ),
+                      onPressed:
+                          () => _showResetConfirmationDialog(taskProvider),
+                      tooltip: 'Reset plans for today',
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.add_circle,
+                        color: Colors.green,
+                        size: 30,
+                      ),
+                      onPressed: () => _showAddTaskDialog(taskProvider),
+                    ),
+                  ],
                 ),
               ],
             ),
             const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: cardColor,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child:
                   taskProvider.tasks.isEmpty
-                      ? const Center(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 24.0),
-                          child: Text('No tasks yet. Add one!'),
-                        ),
+                      ? Column(
+                        children: [
+                          Icon(
+                            Icons.task_alt,
+                            size: 64,
+                            color: Colors.grey.shade400,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No plans for today',
+                            style: GoogleFonts.lato(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Add your daily farming tasks to get started!',
+                            style: GoogleFonts.lato(
+                              fontSize: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       )
                       : ListView.separated(
                         shrinkWrap: true,
@@ -316,6 +375,52 @@ class _ExplorePageState extends State<ExplorePage> {
                         separatorBuilder:
                             (context, index) => const Divider(height: 24),
                       ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showResetConfirmationDialog(TaskProvider taskProvider) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Reset Plans',
+            style: GoogleFonts.lato(fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            'Are you sure you want to clear all plans for today? This action cannot be undone.',
+            style: GoogleFonts.lato(),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Reset'),
+              onPressed: () {
+                taskProvider.resetTasksForToday();
+                Navigator.of(context).pop();
+              },
             ),
           ],
         );
@@ -363,51 +468,115 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 
-  Widget _buildFeaturesCard() {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final cardColor =
-        isDarkMode ? Colors.purple.shade900 : Colors.purple.shade700;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'App Features',
-            style: GoogleFonts.lato(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildFeatureItem(Icons.mic, 'Record Audio Notes'),
-          _buildFeatureItem(Icons.camera_alt, 'Capture Photo Notes'),
-          _buildFeatureItem(Icons.bar_chart, 'View Insights'),
-          _buildFeatureItem(Icons.check_circle_outline, 'Manage Tasks'),
-        ],
-      ),
-    );
+  Widget _buildWeatherSection() {
+    // Implementation of _buildWeatherSection method
+    return Container(); // Placeholder, actual implementation needed
   }
 
-  Widget _buildFeatureItem(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white70),
-          const SizedBox(width: 16),
-          Text(
-            text,
-            style: GoogleFonts.lato(fontSize: 16, color: Colors.white),
+  Widget _buildBestSellingCropsCarousel(Color cardColor, Color textColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Recommended Best-Selling Crops',
+          style: GoogleFonts.lato(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: textColor,
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 180,
+          child: PageView.builder(
+            controller: _cropPageController,
+            itemCount: _bestSellingCrops.length,
+            onPageChanged: (index) => _currentCropPageNotifier.value = index,
+            itemBuilder: (context, index) {
+              final crop = _bestSellingCrops[index];
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 8),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.07),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        bottomLeft: Radius.circular(16),
+                      ),
+                      child: Image.network(
+                        crop['image']!,
+                        width: 90,
+                        height: 180,
+                        fit: BoxFit.cover,
+                        errorBuilder:
+                            (context, error, stackTrace) => Container(
+                              width: 90,
+                              height: 180,
+                              color: Colors.grey.shade200,
+                              child: const Icon(
+                                Icons.image,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
+                            ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              crop['name']!,
+                              style: GoogleFonts.lato(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: textColor,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              crop['desc']!,
+                              style: GoogleFonts.lato(
+                                fontSize: 14,
+                                color: textColor.withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 12),
+        Center(
+          child: CirclePageIndicator(
+            itemCount: _bestSellingCrops.length,
+            currentPageNotifier: _currentCropPageNotifier,
+            selectedDotColor: Colors.green,
+            dotColor: Colors.grey.shade400,
+            size: 10,
+            selectedSize: 12,
+          ),
+        ),
+      ],
     );
   }
 }

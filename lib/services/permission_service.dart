@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PermissionService {
   static final PermissionService _instance = PermissionService._internal();
@@ -96,6 +97,24 @@ class PermissionService {
   // Open app settings
   Future<bool> openAppSettings() async {
     return await openAppSettings();
+  }
+
+  // Check if permissions have been requested before
+  Future<bool> havePermissionsBeenRequested() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('permissions_requested') ?? false;
+  }
+
+  // Mark permissions as requested
+  Future<void> markPermissionsRequested() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('permissions_requested', true);
+  }
+
+  // Reset permission request flag (useful for testing)
+  Future<void> resetPermissionRequestFlag() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('permissions_requested', false);
   }
 
   // Get permission description for UI

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/permission_service.dart';
 import 'home_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class PermissionRequestPage extends StatefulWidget {
   const PermissionRequestPage({super.key});
@@ -26,17 +25,18 @@ class _PermissionRequestPageState extends State<PermissionRequestPage> {
       _isLoading = false;
     });
     
-    if (allGranted && mounted) {
+    if (allGranted) {
       await _markPermissionsRequested();
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomePage()),
-      );
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      }
     }
   }
 
   Future<void> _markPermissionsRequested() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('permissions_requested', true);
+    await _permissionService.markPermissionsRequested();
   }
 
   Future<void> _requestAllPermissions() async {
@@ -80,7 +80,13 @@ class _PermissionRequestPageState extends State<PermissionRequestPage> {
                 children: [
                   const Text(
                     'AgriDiary needs permissions to work properly',
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'This is a one-time request. You can manage permissions later in settings.',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 20),

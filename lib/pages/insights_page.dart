@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:logger/logger.dart';
 import '../services/crop_info_service.dart';
 import '../services/notification_service.dart';
 
@@ -16,6 +17,7 @@ class _InsightsPageState extends State<InsightsPage> {
   final List<String> _crops = ['Corn', 'Wheat', 'Soybeans', 'Rice', 'Cotton'];
   final CropInfoService _cropInfoService = CropInfoService();
   final NotificationService _notificationService = NotificationService();
+  final Logger _logger = Logger();
   
   Map<String, String> _currentCropInfo = {};
   bool _isLoadingCropInfo = false;
@@ -29,17 +31,20 @@ class _InsightsPageState extends State<InsightsPage> {
   }
 
   Future<void> _loadCropInfo(String cropName) async {
+    if (!mounted) return;
     setState(() {
       _isLoadingCropInfo = true;
     });
 
     try {
       final cropInfo = await _cropInfoService.getCropInfo(cropName);
+      if (!mounted) return;
       setState(() {
         _currentCropInfo = cropInfo;
         _isLoadingCropInfo = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoadingCropInfo = false;
       });
@@ -55,7 +60,7 @@ class _InsightsPageState extends State<InsightsPage> {
     try {
       await _notificationService.scheduleCropReminder();
     } catch (e) {
-      print('Error scheduling crop reminder: $e');
+      _logger.e('Error scheduling crop reminder: $e');
     }
   }
 
@@ -418,6 +423,7 @@ class _InsightsPageState extends State<InsightsPage> {
               ),
               items: _crops.map((crop) => DropdownMenuItem(value: crop, child: Text(crop))).toList(),
               onChanged: (value) {
+                if (!mounted) return;
                 setState(() {
                   _selectedCropIndex = _crops.indexOf(value!);
                 });

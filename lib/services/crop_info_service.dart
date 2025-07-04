@@ -1,10 +1,13 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:logger/logger.dart';
 
 class CropInfoService {
   static final CropInfoService _instance = CropInfoService._internal();
   factory CropInfoService() => _instance;
   CropInfoService._internal();
+
+  final Logger _logger = Logger();
 
   // Cache for crop information to avoid repeated API calls
   final Map<String, Map<String, String>> _cropCache = {};
@@ -57,7 +60,7 @@ class CropInfoService {
         return info;
       }
     } catch (e) {
-      print('Error fetching crop info from agricultural sources: $e');
+      _logger.e('Error fetching crop info from agricultural sources: $e');
     }
 
     // Fallback to comprehensive local data
@@ -114,7 +117,7 @@ class CropInfoService {
             if (cropInfo.length == 4) break;
           }
         } catch (e) {
-          print('Error fetching from $source: $e');
+          _logger.w('Error fetching from $source: $e');
           continue;
         }
       }
@@ -125,7 +128,7 @@ class CropInfoService {
       }
 
     } catch (e) {
-      print('Error in agricultural sources search: $e');
+      _logger.e('Error in agricultural sources search: $e');
     }
 
     return cropInfo;
@@ -180,12 +183,12 @@ class CropInfoService {
             }
           }
         } catch (e) {
-          print('Error in search term $i: $e');
+          _logger.w('Error in search term $i: $e');
           continue;
         }
       }
     } catch (e) {
-      print('Error in general agricultural search: $e');
+      _logger.e('Error in general agricultural search: $e');
     }
   }
 

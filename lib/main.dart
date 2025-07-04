@@ -4,7 +4,7 @@ import 'providers/task_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/user_profile_provider.dart';
 import 'providers/permission_provider.dart';
-import 'services/permission_service.dart';
+// import 'services/permission_service.dart'; // Removed unused import
 import 'services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -53,16 +53,14 @@ class _MyAppState extends State<MyApp> {
     final permissionsRequested = prefs.getBool('permissions_requested') ?? false;
     
     if (permissionsRequested) {
-      // If permissions were already requested, just check current status
-      final permissionService = PermissionService();
-      final allGranted = await permissionService.areAllPermissionsGranted();
-      
+      // If permissions were already requested, skip permission request page
+      // and go directly to home page regardless of current permission status
       setState(() {
-        _permissionsGranted = allGranted;
+        _permissionsGranted = true;
         _permissionsChecked = true;
       });
     } else {
-      // First time launching app, show permission request page
+      // First time launching app, show permission request page once
       setState(() {
         _permissionsGranted = false;
         _permissionsChecked = true;

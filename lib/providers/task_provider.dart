@@ -6,6 +6,7 @@ import 'dart:convert';
 class TaskProvider with ChangeNotifier {
   List<Task> _tasks = [];
   static const String _storageKey = 'tasks';
+  static const String _lastResetDateKey = 'last_reset_date';
 
   List<Task> get tasks => _tasks;
 
@@ -13,9 +14,31 @@ class TaskProvider with ChangeNotifier {
     _loadTasks();
   }
 
+  // Check if it's a new day and reset tasks if needed
+  Future<void> _checkAndResetDaily() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastResetDate = prefs.getString(_lastResetDateKey);
+      final today = DateTime.now().toIso8601String().split('T')[0]; // Get YYYY-MM-DD format
+      
+      // If no last reset date or it's a different day, reset tasks
+      if (lastResetDate == null || lastResetDate != today) {
+        _tasks.clear();
+        await prefs.setString(_lastResetDateKey, today);
+        await _saveTasks();
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error checking daily reset: $e');
+    }
+  }
+
   // Load tasks from SharedPreferences
   Future<void> _loadTasks() async {
     try {
+      // First check if we need to reset for a new day
+      await _checkAndResetDaily();
+      
       final prefs = await SharedPreferences.getInstance();
       final tasksJson = prefs.getStringList(_storageKey) ?? [];
       
@@ -59,6 +82,19 @@ class TaskProvider with ChangeNotifier {
     } catch (e) {
       debugPrint('Error saving tasks: $e');
     }
+  }
+
+  // Manually reset tasks for the current day
+  Future<void> resetTasksForToday() async {
+    _tasks.clear();
+    await _saveTasks();
+    notifyListeners();
+  }
+
+  // Get the current date for display
+  String getCurrentDate() {
+    final now = DateTime.now();
+    return '${now.day}/${now.month}/${now.year}';
   }
 
   void addTask(String title) {
