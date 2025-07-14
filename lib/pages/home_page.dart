@@ -3,16 +3,18 @@ import 'package:agridiary/pages/explore_page.dart';
 import 'package:agridiary/pages/insights_page.dart';
 import 'package:agridiary/pages/notes_page.dart';
 import 'package:agridiary/pages/profile_page.dart';
+import 'package:agridiary/pages/notifications_page.dart';
 import 'package:agridiary/pages/audio_recorder_page.dart';
 import 'package:agridiary/providers/user_profile_provider.dart';
+import 'package:agridiary/providers/notification_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as badges;
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:iconly/iconly.dart';
 import 'package:provider/provider.dart';
 import '../models/note.dart';
+import '../models/notification.dart';
 import '../widgets/app_drawer.dart';
-import '../widgets/weather_widget.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -32,6 +34,54 @@ class _HomePageState extends State<HomePage> {
   ];
 
   final ValueNotifier<bool> isDialOpen = ValueNotifier<bool>(false);
+
+  @override
+  void initState() {
+    super.initState();
+    // Load notifications when app starts
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<NotificationProvider>().loadNotifications();
+      _addSampleNotifications();
+    });
+  }
+
+  void _addSampleNotifications() {
+    final notificationProvider = context.read<NotificationProvider>();
+
+    // Add some sample notifications if none exist
+    if (notificationProvider.notifications.isEmpty) {
+      final sampleNotifications = [
+        AppNotification(
+          id: '1',
+          title: 'Daily Planning Reminder',
+          message:
+              'Good morning! Time to plan your day. Add tasks and organize your farming activities.',
+          type: 'daily_planning_reminder',
+          timestamp: DateTime.now().subtract(const Duration(hours: 2)),
+        ),
+        AppNotification(
+          id: '2',
+          title: 'Weather Alert',
+          message:
+              'Heavy rain expected in the next 24 hours. Consider protecting your crops.',
+          type: 'weather_alert',
+          timestamp: DateTime.now().subtract(const Duration(days: 1)),
+        ),
+        AppNotification(
+          id: '3',
+          title: 'Crop Check Reminder',
+          message:
+              'Time to check your crops! Monitor for pests, water needs, and growth progress.',
+          type: 'crop_reminder',
+          timestamp: DateTime.now().subtract(const Duration(days: 2)),
+        ),
+      ];
+
+      for (final notification in sampleNotifications) {
+        notificationProvider.addNotification(notification);
+      }
+    }
+  }
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -99,22 +149,37 @@ class _HomePageState extends State<HomePage> {
                 actions: [
                   Padding(
                     padding: const EdgeInsets.only(right: 15.0),
-                    child: IconButton.filledTonal(
-                      onPressed: () {},
-                      icon: badges.Badge(
-                        badgeContent: const Text(
-                          '3',
-                          style: TextStyle(color: Colors.white, fontSize: 12),
-                        ),
-                        badgeStyle: const badges.BadgeStyle(
-                          badgeColor: Colors.green,
-                        ),
-                        position: badges.BadgePosition.topEnd(
-                          top: -15,
-                          end: -12,
-                        ),
-                        child: const Icon(IconlyLight.notification),
-                      ),
+                    child: Consumer<NotificationProvider>(
+                      builder: (context, notificationProvider, child) {
+                        return IconButton.filledTonal(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const NotificationsPage(),
+                              ),
+                            );
+                          },
+                          icon: badges.Badge(
+                            badgeContent: Text(
+                              notificationProvider.unreadCount.toString(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                            badgeStyle: const badges.BadgeStyle(
+                              badgeColor: Colors.green,
+                            ),
+                            position: badges.BadgePosition.topEnd(
+                              top: -15,
+                              end: -12,
+                            ),
+                            showBadge: notificationProvider.unreadCount > 0,
+                            child: const Icon(IconlyLight.notification),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -165,12 +230,7 @@ class _HomePageState extends State<HomePage> {
         onOpen: () => isDialOpen.value = true,
         onClose: () => isDialOpen.value = false,
       ),
-      body: Column(
-        children: [
-          if (_selectedIndex == 0) const WeatherWidget(),
-          Expanded(child: _pages[_selectedIndex]),
-        ],
-      ),
+      body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) {

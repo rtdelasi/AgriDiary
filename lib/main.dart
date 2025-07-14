@@ -4,31 +4,38 @@ import 'providers/task_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/user_profile_provider.dart';
 import 'providers/permission_provider.dart';
-// import 'services/permission_service.dart'; // Removed unused import
-import 'services/notification_service.dart';
+import 'providers/notification_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:logger/logger.dart';
 
 void main() async {
-  // Ensure Flutter is initialized
-  WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize notification service
-  final notificationService = NotificationService();
-  await notificationService.initialize();
-  
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => ThemeProvider()),
-        ChangeNotifierProvider(create: (context) => UserProfileProvider()),
-        ChangeNotifierProvider(create: (context) => TaskProvider()),
-        ChangeNotifierProvider(create: (context) => PermissionProvider()),
-      ],
-      child: const MyApp(),
-    ),
-  );
+  final logger = Logger();
+  try {
+    logger.i('Starting main');
+    WidgetsFlutterBinding.ensureInitialized();
+    logger.i('Before notificationService.initialize');
+    // final notificationService = NotificationService();
+    // await notificationService.initialize();
+    logger.i('After notificationService.initialize (skipped)');
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (context) => ThemeProvider()),
+          ChangeNotifierProvider(create: (context) => UserProfileProvider()),
+          ChangeNotifierProvider(create: (context) => TaskProvider()),
+          ChangeNotifierProvider(create: (context) => PermissionProvider()),
+          ChangeNotifierProvider(create: (context) => NotificationProvider()),
+        ],
+        child: const MyApp(),
+      ),
+    );
+    logger.i('After runApp');
+  } catch (e, stack) {
+    logger.e('Error in main: $e');
+    logger.e('Stack trace: $stack');
+  }
 }
 
 class MyApp extends StatefulWidget {

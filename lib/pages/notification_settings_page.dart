@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/notification_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class NotificationSettingsPage extends StatefulWidget {
   const NotificationSettingsPage({super.key});
@@ -11,7 +13,13 @@ class NotificationSettingsPage extends StatefulWidget {
 
 class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
   final NotificationService _notificationService = NotificationService();
-  Map<String, bool> _settings = {};
+  Map<String, bool> _settings = {
+    'weather_alerts': true,
+    'pest_alerts': true,
+    'crop_reminders': true,
+    'general_notifications': true,
+    'daily_planning': true,
+  };
   bool _isLoading = true;
 
   @override
@@ -21,52 +29,32 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
   }
 
   Future<void> _loadSettings() async {
-    try {
-      final settings = await _notificationService.getNotificationSettings();
+    final prefs = await SharedPreferences.getInstance();
+    final settingsJson = prefs.getString('notification_settings');
+    
+    if (settingsJson != null) {
+      final Map<String, dynamic> settings = json.decode(settingsJson);
       setState(() {
-        _settings = settings;
+        _settings = Map<String, bool>.from(settings);
         _isLoading = false;
       });
-    } catch (e) {
+    } else {
       setState(() {
         _isLoading = false;
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading settings: $e')),
-        );
-      }
     }
   }
 
-  Future<void> _updateSetting(String key, bool value) async {
-    try {
-      setState(() {
-        _settings[key] = value;
-      });
-      
-      await _notificationService.updateNotificationSettings(_settings);
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${_getSettingTitle(key)} ${value ? 'enabled' : 'disabled'}'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      // Revert the change if there was an error
-      setState(() {
-        _settings[key] = !value;
-      });
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating setting: $e')),
-        );
-      }
-    }
+  Future<void> _saveSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('notification_settings', json.encode(_settings));
+  }
+
+  void _updateSetting(String key, bool value) {
+    setState(() {
+      _settings[key] = value;
+    });
+    _saveSettings();
   }
 
   String _getSettingTitle(String key) {
@@ -79,6 +67,8 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
         return 'Crop Reminders';
       case 'general_notifications':
         return 'General Notifications';
+      case 'daily_planning':
+        return 'Daily Planning Reminders';
       default:
         return 'Notification';
     }
@@ -94,6 +84,8 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
         return 'Daily reminders to check your crops for growth progress, water needs, and general monitoring';
       case 'general_notifications':
         return 'General app updates, tips, and farming advice notifications';
+      case 'daily_planning':
+        return 'Morning reminders to plan your day';
       default:
         return 'Notification setting';
     }
@@ -109,6 +101,8 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
         return Icons.eco;
       case 'general_notifications':
         return Icons.notifications;
+      case 'daily_planning':
+        return Icons.schedule;
       default:
         return Icons.notifications;
     }
@@ -124,6 +118,8 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
         return Colors.green;
       case 'general_notifications':
         return Colors.grey;
+      case 'daily_planning':
+        return Colors.green;
       default:
         return Colors.grey;
     }
@@ -157,6 +153,9 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
             'General Notification Test',
             'This is a test general notification.',
           );
+          break;
+        case 'daily_planning':
+          await _notificationService.showDailyPlanningReminder();
           break;
       }
       

@@ -46,27 +46,14 @@ class TaskProvider with ChangeNotifier {
           .map((taskJson) => Task.fromJson(json.decode(taskJson)))
           .toList();
       
-      // If no tasks are saved, add default tasks
-      if (_tasks.isEmpty) {
-        _tasks = [
-          Task(title: 'Check for pests', description: 'Inspect the north field'),
-          Task(title: 'Water the crops', description: 'Use the new irrigation system'),
-          Task(title: 'Harvest tomatoes', description: 'Morning harvest'),
-          Task(title: 'Buy new seeds', description: 'Visit the local store'),
-        ];
-        await _saveTasks();
-      }
+      // If no tasks are saved, start with empty list
+      // No default tasks - user will add their own tasks
       
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading tasks: $e');
-      // Fallback to default tasks if loading fails
-      _tasks = [
-        Task(title: 'Check for pests', description: 'Inspect the north field'),
-        Task(title: 'Water the crops', description: 'Use the new irrigation system'),
-        Task(title: 'Harvest tomatoes', description: 'Morning harvest'),
-        Task(title: 'Buy new seeds', description: 'Visit the local store'),
-      ];
+      // Fallback to empty list if loading fails
+      _tasks = [];
       notifyListeners();
     }
   }

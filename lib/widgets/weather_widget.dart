@@ -138,7 +138,7 @@ class _WeatherWidgetState extends State<WeatherWidget> {
       } else {
         if (mounted) {
           setState(() {
-            _error = 'Failed to fetch weather data';
+            _error = 'Connect to the internet';
             _loading = false;
           });
         }
@@ -146,7 +146,7 @@ class _WeatherWidgetState extends State<WeatherWidget> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = 'Error fetching weather: ${e.toString()}';
+          _error = 'Connect to the internet';
           _loading = false;
         });
       }
@@ -157,33 +157,25 @@ class _WeatherWidgetState extends State<WeatherWidget> {
     String alertTitle = 'Weather Change Alert';
     String alertMessage = 'Weather has changed to: $newWeather';
     
-    // Determine weather type for notification
-    String weatherType = 'general';
-    
     if (newWeather.toLowerCase().contains('rain') || 
         newWeather.toLowerCase().contains('shower') ||
         newWeather.toLowerCase().contains('drizzle')) {
-      weatherType = 'rain';
       alertTitle = 'Rain Alert';
       alertMessage = 'Rain detected in your area. Consider protecting sensitive crops and adjusting irrigation.';
     } else if (newWeather.toLowerCase().contains('storm') || 
                newWeather.toLowerCase().contains('thunder')) {
-      weatherType = 'storm';
       alertTitle = 'Storm Alert';
       alertMessage = 'Storm conditions detected. Secure equipment and protect crops from potential damage.';
     } else if (newWeather.toLowerCase().contains('snow') || 
                newWeather.toLowerCase().contains('frost')) {
-      weatherType = 'cold';
       alertTitle = 'Cold Weather Alert';
       alertMessage = 'Cold weather detected. Protect frost-sensitive crops and consider covering plants.';
     } else if (newWeather.toLowerCase().contains('sunny') || 
                newWeather.toLowerCase().contains('clear')) {
-      weatherType = 'sunny';
       alertTitle = 'Clear Weather Alert';
       alertMessage = 'Clear weather conditions. Good time for outdoor farming activities and crop monitoring.';
     } else if (newWeather.toLowerCase().contains('cloudy') || 
                newWeather.toLowerCase().contains('overcast')) {
-      weatherType = 'cloudy';
       alertTitle = 'Cloudy Weather Alert';
       alertMessage = 'Cloudy conditions detected. Monitor light-sensitive crops and adjust watering schedules.';
     }
@@ -193,8 +185,8 @@ class _WeatherWidgetState extends State<WeatherWidget> {
       alertMessage += ' Temperature: ${temperature.toStringAsFixed(1)}°C';
     }
 
-    // Send notification
-    await _notificationService.showWeatherAlert(alertTitle, alertMessage, weatherType);
+    // Send real-time notification
+    await _notificationService.showImmediateNotification(alertTitle, alertMessage, 'weather_alert');
   }
 
   Widget _buildLoadingWidget() {

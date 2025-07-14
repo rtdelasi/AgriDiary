@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'dart:convert';
+import '../models/notification.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -24,11 +25,13 @@ class NotificationService {
   static const int pestAlertId = 2000;
   static const int cropReminderId = 3000;
   static const int generalNotificationId = 4000;
+  static const int dailyPlanningId = 5000;
 
   // Settings keys
   static const String _settingsKey = 'notification_settings';
   static const String _lastWeatherKey = 'last_weather_alert';
   static const String _lastPestKey = 'last_pest_alert';
+  static const String _dailyPlanningKey = 'daily_planning_scheduled';
 
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -55,6 +58,7 @@ class NotificationService {
     );
 
     await _createNotificationChannels();
+    await _scheduleDailyPlanningReminder();
     _isInitialized = true;
   }
 
@@ -113,6 +117,29 @@ class NotificationService {
   void _onNotificationTapped(NotificationResponse response) {
     // Handle notification tap - you can navigate to specific pages here
     debugPrint('Notification tapped: ${response.payload}');
+    
+    // Parse the payload and add to notification provider
+    try {
+      final payload = json.decode(response.payload ?? '{}');
+      final notification = AppNotification(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        title: payload['title'] ?? 'Notification',
+        message: payload['body'] ?? 'You have a new notification',
+        type: payload['type'] ?? 'general_notification',
+        timestamp: DateTime.now(),
+        payload: payload,
+      );
+      
+      // Add to notification provider if available
+      // Note: This would need to be handled through a global key or service locator
+      // For now, we'll just log it
+      debugPrint('Notification received: ${notification.title}');
+      
+      // Mark notification as read when tapped
+      _markNotificationAsRead(notification.id);
+    } catch (e) {
+      debugPrint('Error parsing notification payload: $e');
+    }
   }
 
   // Weather alert notification
@@ -344,6 +371,105 @@ class NotificationService {
     );
   }
 
+  // Schedule daily planning reminder at 5 AM
+  Future<void> _scheduleDailyPlanningReminder() async {
+    if (!_isInitialized) await initialize();
+    
+    final settings = await getNotificationSettings();
+    if (!(settings['daily_planning'] ?? true)) return;
+
+    // Check if already scheduled
+    final prefs = await SharedPreferences.getInstance();
+    final isScheduled = prefs.getBool(_dailyPlanningKey) ?? false;
+    if (isScheduled) return;
+
+    const androidDetails = AndroidNotificationDetails(
+      generalChannelId,
+      'General Notifications',
+      channelDescription: 'General app notifications and updates',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      color: Color(0xFF4CAF50),
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    // Schedule for 5:00 AM daily
+    final now = tz.TZDateTime.now(tz.local);
+    final scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 5, 0);
+    
+    // If it's already past 5 AM, schedule for tomorrow
+    final targetDate = scheduledDate.isBefore(now) 
+        ? scheduledDate.add(const Duration(days: 1))
+        : scheduledDate;
+
+    await _notificationsPlugin.zonedSchedule(
+      dailyPlanningId,
+      'Daily Planning Reminder',
+      'Good morning! Time to plan your day. Add tasks and organize your farming activities.',
+      targetDate,
+      details,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      payload: json.encode({
+        'type': 'daily_planning_reminder',
+        'timestamp': targetDate.toIso8601String(),
+      }),
+    );
+
+    // Mark as scheduled
+    await prefs.setBool(_dailyPlanningKey, true);
+  }
+
+  // Show daily planning reminder
+  Future<void> showDailyPlanningReminder() async {
+    if (!_isInitialized) await initialize();
+    
+    final settings = await getNotificationSettings();
+    if (!(settings['daily_planning'] ?? true)) return;
+
+    const androidDetails = AndroidNotificationDetails(
+      generalChannelId,
+      'General Notifications',
+      channelDescription: 'General app notifications and updates',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      color: Color(0xFF4CAF50),
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notificationsPlugin.show(
+      dailyPlanningId,
+      'Daily Planning Reminder',
+      'Good morning! Time to plan your day. Add tasks and organize your farming activities.',
+      details,
+      payload: json.encode({
+        'type': 'daily_planning_reminder',
+        'timestamp': DateTime.now().toIso8601String(),
+      }),
+    );
+  }
+
   // Get notification settings
   Future<Map<String, bool>> getNotificationSettings() async {
     final prefs = await SharedPreferences.getInstance();
@@ -360,6 +486,7 @@ class NotificationService {
       'pest_alerts': true,
       'crop_reminders': true,
       'general_notifications': true,
+      'daily_planning': true,
     };
   }
 
@@ -431,5 +558,97 @@ class NotificationService {
   Future<List<PendingNotificationRequest>> getPendingNotifications() async {
     if (!_isInitialized) await initialize();
     return await _notificationsPlugin.pendingNotificationRequests();
+  }
+
+  // Add notification to provider (to be called from UI)
+  static void addNotificationToProvider(AppNotification notification) {
+    // This would be called from the UI when a notification is received
+    debugPrint('Adding notification to provider: ${notification.title}');
+  }
+
+  // Mark notification as read
+  void _markNotificationAsRead(String notificationId) {
+    // This would mark the notification as read in the provider
+    debugPrint('Marking notification as read: $notificationId');
+  }
+
+  // Real-time notification methods for immediate display
+  Future<void> showImmediateNotification(String title, String message, String type) async {
+    if (!_isInitialized) await initialize();
+    
+    final settings = await getNotificationSettings();
+    if (!(settings['general_notifications'] ?? true)) return;
+
+    final androidDetails = AndroidNotificationDetails(
+      generalChannelId,
+      'General Notifications',
+      channelDescription: 'General app notifications and updates',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      color: Color(0xFF4CAF50),
+      showWhen: true,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    final details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    final notificationId = DateTime.now().millisecondsSinceEpoch;
+    
+    await _notificationsPlugin.show(
+      notificationId,
+      title,
+      message,
+      details,
+      payload: json.encode({
+        'type': type,
+        'timestamp': DateTime.now().toIso8601String(),
+        'id': notificationId.toString(),
+      }),
+    );
+
+    // Create notification object for provider
+    final notification = AppNotification(
+      id: notificationId.toString(),
+      title: title,
+      message: message,
+      type: type,
+      timestamp: DateTime.now(),
+      payload: {
+        'type': type,
+        'timestamp': DateTime.now().toIso8601String(),
+        'id': notificationId.toString(),
+      },
+    );
+
+    // Add to provider immediately
+    addNotificationToProvider(notification);
+  }
+
+  // Show daily planning reminder and add to provider
+  Future<void> showDailyPlanningReminderWithProvider() async {
+    await showDailyPlanningReminder();
+    
+    final notification = AppNotification(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: 'Daily Planning Reminder',
+      message: 'Good morning! Time to plan your day. Add tasks and organize your farming activities.',
+      type: 'daily_planning_reminder',
+      timestamp: DateTime.now(),
+      payload: {
+        'type': 'daily_planning_reminder',
+        'timestamp': DateTime.now().toIso8601String(),
+      },
+    );
+    
+    addNotificationToProvider(notification);
   }
 } 

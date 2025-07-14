@@ -20,8 +20,8 @@ class _ExplorePageState extends State<ExplorePage> {
   // Mocked best-selling crops data
   final List<Map<String, String>> _bestSellingCrops = [
     {
-      'name': 'Tomato',
-      'image': 'assets/images/tomato.jpg',
+      'name': 'Tomatoes',
+      'image': 'assets/images/tomatoes.jpg',
       'desc': 'High demand in markets, easy to grow in most climates.',
     },
     {
@@ -40,7 +40,7 @@ class _ExplorePageState extends State<ExplorePage> {
       'desc': 'Popular for bread and flour, high market value.',
     },
     {
-      'name': 'Potato',
+      'name': 'Potatoes',
       'image': 'assets/images/potatoes.jpg',
       'desc': 'Versatile crop, used in many dishes worldwide.',
     },
@@ -115,11 +115,11 @@ class _ExplorePageState extends State<ExplorePage> {
               padding: const EdgeInsets.all(16.0),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
+                  _buildWeatherSection(),
+                  const SizedBox(height: 24),
                   _buildFarmerCard(),
                   const SizedBox(height: 24),
                   _buildMyPlansSection(cardColor, textColor),
-                  const SizedBox(height: 24),
-                  _buildWeatherSection(),
                   const SizedBox(height: 24),
                   _buildBestSellingCropsCarousel(cardColor, textColor),
                 ]),
@@ -469,8 +469,68 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   Widget _buildWeatherSection() {
-    // Implementation of _buildWeatherSection method
-    return Container(); // Placeholder, actual implementation needed
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.blue.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.wb_sunny,
+              color: Colors.blue,
+              size: 32,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Weather Forecast',
+                  style: GoogleFonts.lato(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[700],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '24°C • Partly Cloudy',
+                  style: GoogleFonts.lato(
+                    fontSize: 14,
+                    color: Colors.blue[600],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Good conditions for outdoor farming activities',
+                  style: GoogleFonts.lato(
+                    fontSize: 12,
+                    color: Colors.blue[500],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.blue),
+            onPressed: () {
+              // Refresh weather data
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildBestSellingCropsCarousel(Color cardColor, Color textColor) {
@@ -514,7 +574,7 @@ class _ExplorePageState extends State<ExplorePage> {
                         topLeft: Radius.circular(16),
                         bottomLeft: Radius.circular(16),
                       ),
-                      child: Image.network(
+                      child: Image.asset(
                         crop['image']!,
                         width: 90,
                         height: 180,
