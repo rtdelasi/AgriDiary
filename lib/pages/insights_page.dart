@@ -20,20 +20,29 @@ class InsightsPage extends StatefulWidget {
 
 class _InsightsPageState extends State<InsightsPage> {
   int _selectedCropIndex = 0;
-  final List<String> _crops = ['Corn', 'Wheat', 'Soybeans', 'Rice', 'Cotton', 'Tomato', 'Potato', 'Maize'];
+  final List<String> _crops = [
+    'Corn',
+    'Wheat',
+    'Soybeans',
+    'Rice',
+    'Cotton',
+    'Tomato',
+    'Potato',
+    'Maize',
+  ];
   final CropInfoService _cropInfoService = CropInfoService();
   final NotificationService _notificationService = NotificationService();
   final RainfallService _rainfallService = RainfallService();
   final MarketService _marketService = MarketService();
   final HarvestPlannerService _harvestPlannerService = HarvestPlannerService();
   final Logger _logger = Logger();
-  
+
   Map<String, String> _currentCropInfo = {};
   bool _isLoadingCropInfo = false;
   bool _isLoadingRainfall = false;
   bool _isLoadingMarket = false;
   bool _isLoadingHarvest = false;
-  
+
   RainfallAnalysis? _rainfallAnalysis;
   MarketTrends? _marketTrends;
   List<HarvestPlan> _harvestPlans = [];
@@ -89,7 +98,9 @@ class _InsightsPageState extends State<InsightsPage> {
     });
 
     try {
-      final rainfallData = await _rainfallService.getRainfallData('Farm Location');
+      final rainfallData = await _rainfallService.getRainfallData(
+        'Farm Location',
+      );
       if (!mounted) return;
       setState(() {
         _rainfallAnalysis = rainfallData;
@@ -136,7 +147,7 @@ class _InsightsPageState extends State<InsightsPage> {
       final plans = await _harvestPlannerService.loadHarvestPlans();
       final insights = await _harvestPlannerService.getHarvestInsights();
       final statistics = await _harvestPlannerService.getHarvestStatistics();
-      
+
       if (!mounted) return;
       setState(() {
         _harvestPlans = plans;
@@ -153,8 +164,6 @@ class _InsightsPageState extends State<InsightsPage> {
     }
   }
 
-
-
   Future<void> _sendPestAlert() async {
     try {
       final cropName = _crops[_selectedCropIndex];
@@ -163,7 +172,7 @@ class _InsightsPageState extends State<InsightsPage> {
         'Potential pest activity detected in your $cropName field. Please inspect your crops and consider preventive measures.',
         'pest_alert',
       );
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -267,7 +276,9 @@ class _InsightsPageState extends State<InsightsPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -281,7 +292,9 @@ class _InsightsPageState extends State<InsightsPage> {
                 ),
               ),
               const SizedBox(height: 12),
-              ..._harvestPlans.take(3).map((plan) => _buildHarvestPlanItem(plan, textColor)),
+              ..._harvestPlans
+                  .take(3)
+                  .map((plan) => _buildHarvestPlanItem(plan, textColor)),
             ],
           ],
         ),
@@ -323,7 +336,13 @@ class _InsightsPageState extends State<InsightsPage> {
     );
   }
 
-  Widget _buildStatItem(String label, String value, IconData icon, Color color, Color textColor) {
+  Widget _buildStatItem(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+    Color textColor,
+  ) {
     return Column(
       children: [
         Icon(icon, color: color, size: 24),
@@ -348,17 +367,24 @@ class _InsightsPageState extends State<InsightsPage> {
   }
 
   Widget _buildHarvestPlanItem(HarvestPlan plan, Color textColor) {
-    final daysUntilHarvest = plan.expectedHarvestDate.difference(DateTime.now()).inDays;
+    final daysUntilHarvest =
+        plan.expectedHarvestDate.difference(DateTime.now()).inDays;
     final isOverdue = daysUntilHarvest < 0;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isOverdue ? Colors.red.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
+        color:
+            isOverdue
+                ? Colors.red.withValues(alpha: 0.1)
+                : Colors.green.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isOverdue ? Colors.red.withValues(alpha: 0.3) : Colors.green.withValues(alpha: 0.3),
+          color:
+              isOverdue
+                  ? Colors.red.withValues(alpha: 0.3)
+                  : Colors.green.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -437,34 +463,39 @@ class _InsightsPageState extends State<InsightsPage> {
                 ),
               ),
               const SizedBox(height: 8),
-              ...(_harvestInsights['recommendations'] as List<dynamic>).map((rec) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.lightbulb, color: Colors.amber, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        rec.toString(),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: textColor.withValues(alpha: 0.8),
+              ...(_harvestInsights['recommendations'] as List<dynamic>).map(
+                (rec) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.lightbulb, color: Colors.amber, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          rec.toString(),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: textColor.withValues(alpha: 0.8),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              )),
+              ),
             ],
-            if (_harvestInsights['bestPerformingCrop'] != null && _harvestInsights['bestPerformingCrop'] != 'No data') ...[
+            if (_harvestInsights['bestPerformingCrop'] != null &&
+                _harvestInsights['bestPerformingCrop'] != 'No data') ...[
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: Colors.green.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -522,21 +553,30 @@ class _InsightsPageState extends State<InsightsPage> {
             ),
             const SizedBox(height: 20),
             if (_rainfallAnalysis != null) ...[
-              SizedBox(
-                height: 200,
-                child: LineChart(_rainfallChartData()),
-              ),
+              SizedBox(height: 200, child: LineChart(_rainfallChartData())),
               const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
-                    child: _buildRainfallMetric('This Week', '${_rainfallAnalysis!.totalWeeklyRainfall.toStringAsFixed(1)}mm', Colors.blue),
+                    child: _buildRainfallMetric(
+                      'This Week',
+                      '${_rainfallAnalysis!.totalWeeklyRainfall.toStringAsFixed(1)}mm',
+                      Colors.blue,
+                    ),
                   ),
                   Expanded(
-                    child: _buildRainfallMetric('This Month', '${_rainfallAnalysis!.totalMonthlyRainfall.toStringAsFixed(1)}mm', Colors.lightBlue),
+                    child: _buildRainfallMetric(
+                      'This Month',
+                      '${_rainfallAnalysis!.totalMonthlyRainfall.toStringAsFixed(1)}mm',
+                      Colors.lightBlue,
+                    ),
                   ),
                   Expanded(
-                    child: _buildRainfallMetric('Daily Avg', '${_rainfallAnalysis!.averageDailyRainfall.toStringAsFixed(1)}mm', Colors.cyan),
+                    child: _buildRainfallMetric(
+                      'Daily Avg',
+                      '${_rainfallAnalysis!.averageDailyRainfall.toStringAsFixed(1)}mm',
+                      Colors.cyan,
+                    ),
                   ),
                 ],
               ),
@@ -555,19 +595,14 @@ class _InsightsPageState extends State<InsightsPage> {
                     Expanded(
                       child: Text(
                         _rainfallAnalysis!.farmingRecommendation,
-                        style: TextStyle(
-                          color: Colors.blue[700],
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.blue[700], fontSize: 14),
                       ),
                     ),
                   ],
                 ),
               ),
             ] else ...[
-              const Center(
-                child: Text('Loading rainfall data...'),
-              ),
+              const Center(child: Text('Loading rainfall data...')),
             ],
           ],
         ),
@@ -617,7 +652,9 @@ class _InsightsPageState extends State<InsightsPage> {
                 ),
               ),
               const SizedBox(height: 16),
-              ..._marketTrends!.marketData.take(5).map((data) => _buildMarketDataItem(data, textColor)),
+              ..._marketTrends!.marketData
+                  .take(5)
+                  .map((data) => _buildMarketDataItem(data, textColor)),
               const SizedBox(height: 16),
               if (_marketTrends!.marketData.isNotEmpty) ...[
                 Container(
@@ -625,7 +662,9 @@ class _InsightsPageState extends State<InsightsPage> {
                   decoration: BoxDecoration(
                     color: Colors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: Colors.orange.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -645,9 +684,7 @@ class _InsightsPageState extends State<InsightsPage> {
                 ),
               ],
             ] else ...[
-              const Center(
-                child: Text('Loading market data...'),
-              ),
+              const Center(child: Text('Loading market data...')),
             ],
           ],
         ),
@@ -658,7 +695,7 @@ class _InsightsPageState extends State<InsightsPage> {
   Widget _buildMarketDataItem(MarketData data, Color textColor) {
     final isPositive = data.priceChangePercentage > 0;
     final color = isPositive ? Colors.green : Colors.red;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
@@ -695,17 +732,11 @@ class _InsightsPageState extends State<InsightsPage> {
             children: [
               Text(
                 '${isPositive ? '+' : ''}${data.priceChangePercentage.toStringAsFixed(1)}%',
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: color, fontWeight: FontWeight.bold),
               ),
               Text(
                 data.priceTrend,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: color,
-                ),
+                style: TextStyle(fontSize: 12, color: color),
               ),
             ],
           ),
@@ -750,9 +781,17 @@ class _InsightsPageState extends State<InsightsPage> {
               value: _crops[_selectedCropIndex],
               decoration: InputDecoration(
                 labelText: 'Select Crop',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
-              items: _crops.map((crop) => DropdownMenuItem(value: crop, child: Text(crop))).toList(),
+              items:
+                  _crops
+                      .map(
+                        (crop) =>
+                            DropdownMenuItem(value: crop, child: Text(crop)),
+                      )
+                      .toList(),
               onChanged: (value) {
                 if (!mounted) return;
                 setState(() {
@@ -763,28 +802,28 @@ class _InsightsPageState extends State<InsightsPage> {
             ),
             const SizedBox(height: 16),
             _buildCropInsight(
-              'Optimal Planting Time', 
-              _currentCropInfo['planting_time'] ?? 'Loading...', 
-              Icons.calendar_today, 
-              Colors.blue
+              'Optimal Planting Time',
+              _currentCropInfo['planting_time'] ?? 'Loading...',
+              Icons.calendar_today,
+              Colors.blue,
             ),
             _buildCropInsight(
-              'Water Requirements', 
-              _currentCropInfo['water_requirements'] ?? 'Loading...', 
-              Icons.water_drop, 
-              Colors.cyan
+              'Water Requirements',
+              _currentCropInfo['water_requirements'] ?? 'Loading...',
+              Icons.water_drop,
+              Colors.cyan,
             ),
             _buildCropInsight(
-              'Fertilizer Needs', 
-              _currentCropInfo['fertilizer_needs'] ?? 'Loading...', 
-              Icons.grass, 
-              Colors.green
+              'Fertilizer Needs',
+              _currentCropInfo['fertilizer_needs'] ?? 'Loading...',
+              Icons.grass,
+              Colors.green,
             ),
             _buildCropInsight(
-              'Pest Risk', 
-              _currentCropInfo['pest_risk'] ?? 'Loading...', 
-              Icons.bug_report, 
-              Colors.orange
+              'Pest Risk',
+              _currentCropInfo['pest_risk'] ?? 'Loading...',
+              Icons.bug_report,
+              Colors.orange,
             ),
             const SizedBox(height: 12),
             Container(
@@ -817,7 +856,12 @@ class _InsightsPageState extends State<InsightsPage> {
     );
   }
 
-  Widget _buildCropInsight(String title, String value, IconData icon, Color color) {
+  Widget _buildCropInsight(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Row(
@@ -901,10 +945,7 @@ class _InsightsPageState extends State<InsightsPage> {
                   const SizedBox(height: 12),
                   Text(
                     'Monitor your crops regularly for signs of pest activity. Use the button below to send a pest alert notification.',
-                    style: TextStyle(
-                      color: Colors.red[700],
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.red[700], fontSize: 14),
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton.icon(
@@ -914,7 +955,9 @@ class _InsightsPageState extends State<InsightsPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ],
@@ -937,13 +980,7 @@ class _InsightsPageState extends State<InsightsPage> {
             color: color,
           ),
         ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
       ],
     );
   }
@@ -953,20 +990,25 @@ class _InsightsPageState extends State<InsightsPage> {
       return LineChartData();
     }
 
-    final spots = _rainfallAnalysis!.weeklyData.asMap().entries.map((entry) {
-      return FlSpot(entry.key.toDouble(), entry.value.amount);
-    }).toList();
+    final spots =
+        _rainfallAnalysis!.weeklyData.asMap().entries.map((entry) {
+          return FlSpot(entry.key.toDouble(), entry.value.amount);
+        }).toList();
 
     return LineChartData(
       gridData: FlGridData(
         show: true,
         drawVerticalLine: true,
-        getDrawingHorizontalLine: (value) => FlLine(color: Colors.grey.withValues(alpha: 0.3)),
-        getDrawingVerticalLine: (value) => FlLine(color: Colors.grey.withValues(alpha: 0.3)),
+        getDrawingHorizontalLine:
+            (value) => FlLine(color: Colors.grey.withValues(alpha: 0.3)),
+        getDrawingVerticalLine:
+            (value) => FlLine(color: Colors.grey.withValues(alpha: 0.3)),
       ),
       titlesData: FlTitlesData(
         show: true,
-        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        rightTitles: const AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
         topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         bottomTitles: AxisTitles(
           sideTitles: SideTitles(
@@ -975,14 +1017,22 @@ class _InsightsPageState extends State<InsightsPage> {
             getTitlesWidget: (value, meta) {
               const style = TextStyle(fontSize: 12);
               switch (value.toInt()) {
-                case 0: return const Text('Mon', style: style);
-                case 1: return const Text('Tue', style: style);
-                case 2: return const Text('Wed', style: style);
-                case 3: return const Text('Thu', style: style);
-                case 4: return const Text('Fri', style: style);
-                case 5: return const Text('Sat', style: style);
-                case 6: return const Text('Sun', style: style);
-                default: return const Text('', style: style);
+                case 0:
+                  return const Text('Mon', style: style);
+                case 1:
+                  return const Text('Tue', style: style);
+                case 2:
+                  return const Text('Wed', style: style);
+                case 3:
+                  return const Text('Thu', style: style);
+                case 4:
+                  return const Text('Fri', style: style);
+                case 5:
+                  return const Text('Sat', style: style);
+                case 6:
+                  return const Text('Sun', style: style);
+                default:
+                  return const Text('', style: style);
               }
             },
           ),
@@ -992,7 +1042,10 @@ class _InsightsPageState extends State<InsightsPage> {
             showTitles: true,
             reservedSize: 40,
             getTitlesWidget: (value, meta) {
-              return Text('${value.toInt()}mm', style: const TextStyle(fontSize: 12));
+              return Text(
+                '${value.toInt()}mm',
+                style: const TextStyle(fontSize: 12),
+              );
             },
           ),
         ),
@@ -1001,19 +1054,29 @@ class _InsightsPageState extends State<InsightsPage> {
       minX: 0,
       maxX: (_rainfallAnalysis!.weeklyData.length - 1).toDouble(),
       minY: 0,
-      maxY: _rainfallAnalysis!.weeklyData.fold(0.0, (max, data) => data.amount > max ? data.amount : max) + 5,
+      maxY:
+          _rainfallAnalysis!.weeklyData.fold(
+            0.0,
+            (max, data) => data.amount > max ? data.amount : max,
+          ) +
+          5,
       lineBarsData: [
         LineChartBarData(
           spots: spots,
           isCurved: true,
-          gradient: const LinearGradient(colors: [Colors.blue, Colors.lightBlue]),
+          gradient: const LinearGradient(
+            colors: [Colors.blue, Colors.lightBlue],
+          ),
           barWidth: 4,
           isStrokeCapRound: true,
           dotData: const FlDotData(show: true, getDotPainter: _getDotPainter),
           belowBarData: BarAreaData(
             show: true,
             gradient: LinearGradient(
-              colors: [Colors.blue.withAlpha(50), Colors.lightBlue.withAlpha(0)],
+              colors: [
+                Colors.blue.withAlpha(50),
+                Colors.lightBlue.withAlpha(0),
+              ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -1040,7 +1103,7 @@ class _InsightsPageState extends State<InsightsPage> {
 
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Add Harvest Plan'),
           content: SingleChildScrollView(
@@ -1050,13 +1113,23 @@ class _InsightsPageState extends State<InsightsPage> {
                 DropdownButtonFormField<String>(
                   value: selectedCrop,
                   decoration: const InputDecoration(labelText: 'Crop'),
-                  items: _crops.map((crop) => DropdownMenuItem(value: crop, child: Text(crop))).toList(),
+                  items:
+                      _crops
+                          .map(
+                            (crop) => DropdownMenuItem(
+                              value: crop,
+                              child: Text(crop),
+                            ),
+                          )
+                          .toList(),
                   onChanged: (value) => selectedCrop = value!,
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: seedlingsController,
-                  decoration: const InputDecoration(labelText: 'Number of Seedlings'),
+                  decoration: const InputDecoration(
+                    labelText: 'Number of Seedlings',
+                  ),
                   keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 16),
@@ -1066,9 +1139,11 @@ class _InsightsPageState extends State<InsightsPage> {
                   trailing: const Icon(Icons.calendar_today),
                   onTap: () async {
                     final date = await showDatePicker(
-                      context: context,
+                      context: dialogContext,
                       initialDate: selectedDate,
-                      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                      firstDate: DateTime.now().subtract(
+                        const Duration(days: 365),
+                      ),
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                     );
                     if (date != null) {
@@ -1079,7 +1154,9 @@ class _InsightsPageState extends State<InsightsPage> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: notesController,
-                  decoration: const InputDecoration(labelText: 'Notes (Optional)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Notes (Optional)',
+                  ),
                   maxLines: 3,
                 ),
               ],
@@ -1087,7 +1164,7 @@ class _InsightsPageState extends State<InsightsPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
@@ -1102,17 +1179,14 @@ class _InsightsPageState extends State<InsightsPage> {
                       notes: notesController.text,
                     );
                     await _loadHarvestData();
-                    if (mounted) {
-                      Navigator.of(context).pop();
-                    }
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Harvest plan created successfully!'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    }
+                    if (!mounted) return;
+                    Navigator.of(dialogContext).pop();
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      const SnackBar(
+                        content: Text('Harvest plan created successfully!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
                   }
                 }
               },

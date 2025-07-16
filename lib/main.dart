@@ -8,34 +8,22 @@ import 'providers/notification_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:logger/logger.dart';
+import 'services/notification_service.dart';
 
 void main() async {
-  final logger = Logger();
-  try {
-    logger.i('Starting main');
-    WidgetsFlutterBinding.ensureInitialized();
-    logger.i('Before notificationService.initialize');
-    // final notificationService = NotificationService();
-    // await notificationService.initialize();
-    logger.i('After notificationService.initialize (skipped)');
-    runApp(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (context) => ThemeProvider()),
-          ChangeNotifierProvider(create: (context) => UserProfileProvider()),
-          ChangeNotifierProvider(create: (context) => TaskProvider()),
-          ChangeNotifierProvider(create: (context) => PermissionProvider()),
-          ChangeNotifierProvider(create: (context) => NotificationProvider()),
-        ],
-        child: const MyApp(),
-      ),
-    );
-    logger.i('After runApp');
-  } catch (e, stack) {
-    logger.e('Error in main: $e');
-    logger.e('Stack trace: $stack');
-  }
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => ThemeProvider()),
+        ChangeNotifierProvider(create: (context) => UserProfileProvider()),
+        ChangeNotifierProvider(create: (context) => TaskProvider()),
+        ChangeNotifierProvider(create: (context) => PermissionProvider()),
+        ChangeNotifierProvider(create: (context) => NotificationProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -52,6 +40,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    NotificationService().initialize();
     _checkPermissions();
   }
 

@@ -416,7 +416,7 @@ class NotificationService {
     await _notificationsPlugin.zonedSchedule(
       dailyPlanningId,
       'Daily Planning Reminder',
-      'Good morning! Time to plan your day. Add tasks and organize your farming activities.',
+      'Prepare and complete tasks for the day.',
       targetDate,
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -461,7 +461,7 @@ class NotificationService {
     await _notificationsPlugin.show(
       dailyPlanningId,
       'Daily Planning Reminder',
-      'Good morning! Time to plan your day. Add tasks and organize your farming activities.',
+      'Prepare and complete tasks for the day.',
       details,
       payload: json.encode({
         'type': 'daily_planning_reminder',
@@ -640,7 +640,7 @@ class NotificationService {
     final notification = AppNotification(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: 'Daily Planning Reminder',
-      message: 'Good morning! Time to plan your day. Add tasks and organize your farming activities.',
+      message: 'Prepare and complete tasks for the day.',
       type: 'daily_planning_reminder',
       timestamp: DateTime.now(),
       payload: {

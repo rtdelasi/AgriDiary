@@ -355,7 +355,7 @@ class _ExplorePageState extends State<ExplorePage> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Add your daily farming tasks to get started!',
+                            '      Add your daily farming tasks to get started!      ',
                             style: GoogleFonts.lato(
                               fontSize: 14,
                               color: Colors.grey.shade500,
@@ -484,11 +484,7 @@ class _ExplorePageState extends State<ExplorePage> {
               color: Colors.blue.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
-              Icons.wb_sunny,
-              color: Colors.blue,
-              size: 32,
-            ),
+            child: const Icon(Icons.wb_sunny, color: Colors.blue, size: 32),
           ),
           const SizedBox(width: 16),
           Expanded(

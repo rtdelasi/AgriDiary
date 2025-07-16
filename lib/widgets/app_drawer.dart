@@ -23,8 +23,8 @@ class AppDrawer extends StatelessWidget {
               children: <Widget>[
                 _buildDrawerHeader(context, userProfileProvider),
                 _buildDrawerItem(
-                  icon: Icons.explore_outlined,
-                  text: 'Explore',
+                  icon: Icons.home_outlined,
+                  text: 'Home',
                   onTap: () => onNavigation(0),
                 ),
                 _buildDrawerItem(
@@ -41,6 +41,11 @@ class AppDrawer extends StatelessWidget {
                   icon: Icons.person_outline,
                   text: 'Profile',
                   onTap: () => onNavigation(3),
+                ),
+                _buildDrawerItem(
+                  icon: Icons.person_3_outlined,
+                  text: 'Add Farmers',
+                  onTap: () {},
                 ),
                 const Divider(),
                 SwitchListTile(
@@ -71,7 +76,10 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawerHeader(BuildContext context, UserProfileProvider userProfileProvider) {
+  Widget _buildDrawerHeader(
+    BuildContext context,
+    UserProfileProvider userProfileProvider,
+  ) {
     return UserAccountsDrawerHeader(
       accountName: Text(
         userProfileProvider.name,
@@ -79,23 +87,23 @@ class AppDrawer extends StatelessWidget {
       ),
       accountEmail: Text(userProfileProvider.email),
       currentAccountPicture: CircleAvatar(
-        backgroundImage: userProfileProvider.photoPath != null
-            ? FileImage(File(userProfileProvider.photoPath!))
-            : const NetworkImage(
-                    'https://i.pravatar.cc/150?u=a042581f4e29026704d')
-                as ImageProvider,
+        backgroundImage:
+            userProfileProvider.photoPath != null
+                ? FileImage(File(userProfileProvider.photoPath!))
+                : const NetworkImage(
+                      'https://i.pravatar.cc/150?u=a042581f4e29026704d',
+                    )
+                    as ImageProvider,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.green,
-      ),
+      decoration: const BoxDecoration(color: Colors.green),
     );
   }
 
-  Widget _buildDrawerItem({required IconData icon, required String text, required GestureTapCallback onTap}) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(text),
-      onTap: onTap,
-    );
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String text,
+    required GestureTapCallback onTap,
+  }) {
+    return ListTile(leading: Icon(icon), title: Text(text), onTap: onTap);
   }
-} 
+}
