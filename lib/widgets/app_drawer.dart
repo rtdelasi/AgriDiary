@@ -43,7 +43,7 @@ class AppDrawer extends StatelessWidget {
                   onTap: () => onNavigation(3),
                 ),
                 _buildDrawerItem(
-                  icon: Icons.person_3_outlined,
+                  icon: Icons.group_outlined,
                   text: 'Add Farmers',
                   onTap: () {},
                 ),

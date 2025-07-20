@@ -1180,13 +1180,19 @@ class _InsightsPageState extends State<InsightsPage> {
                     );
                     await _loadHarvestData();
                     if (!mounted) return;
-                    Navigator.of(dialogContext).pop();
-                    ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      const SnackBar(
-                        content: Text('Harvest plan created successfully!'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
+                    // Use try-catch to handle potential context issues
+                    try {
+                      Navigator.of(dialogContext).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Harvest plan created successfully!'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } catch (e) {
+                      // Dialog was already closed or context is invalid
+                      debugPrint('Dialog context is no longer valid: $e');
+                    }
                   }
                 }
               },
