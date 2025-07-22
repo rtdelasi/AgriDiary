@@ -240,7 +240,12 @@ class _PermissionSettingsPageState extends State<PermissionSettingsPage> {
                         subtitle: 'Open system settings',
                         color: Colors.blue,
                         onTap: () async {
-                          await permissionProvider.openAppSettings();
+                          final success = await permissionProvider.openAppSettings();
+                          if (!success && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Could not open app settings.')),
+                            );
+                          }
                         },
                       ),
                     ),

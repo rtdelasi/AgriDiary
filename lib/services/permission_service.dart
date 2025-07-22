@@ -96,7 +96,12 @@ class PermissionService {
 
   // Open app settings
   Future<bool> openAppSettings() async {
-    return await openAppSettings();
+    try {
+      return await openAppSettings();
+    } catch (e) {
+      debugPrint('Failed to open app settings: $e');
+      return false;
+    }
   }
 
   // Check if permissions have been requested before

@@ -233,7 +233,17 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.settings),
                     label: const Text('Open App Settings'),
-                    onPressed: () => openAppSettings(),
+                    onPressed: () async {
+                      try {
+                        await openAppSettings();
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Could not open app settings.')),
+                          );
+                        }
+                      }
+                    },
                   ),
                 ),
               if (_error!.contains('denied'))
