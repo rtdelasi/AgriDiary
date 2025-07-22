@@ -15,20 +15,46 @@ class NotesPage extends StatefulWidget {
 class _NotesPageState extends State<NotesPage> {
   final NotesService _notesService = NotesService();
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final TextEditingController _searchController = TextEditingController();
   List<Note> _notes = [];
+  List<Note> _filteredNotes = [];
   String? _currentlyPlayingId;
   bool _isLoading = true;
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _loadNotes();
+    _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
     _audioPlayer.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text.trim().toLowerCase();
+      _applySearch();
+    });
+  }
+
+  void _applySearch() {
+    if (_searchQuery.isEmpty) {
+      _filteredNotes = _notes;
+    } else {
+      _filteredNotes = _notes.where((note) {
+        final query = _searchQuery;
+        final inTitle = note.title.toLowerCase().contains(query);
+        final inImages = note.images.any((img) => img.name.toLowerCase().contains(query));
+        final inRecordings = note.recordings.any((rec) => rec.name.toLowerCase().contains(query));
+        return inTitle || inImages || inRecordings;
+      }).toList();
+    }
   }
 
   Future<void> _loadNotes() async {
@@ -37,6 +63,7 @@ class _NotesPageState extends State<NotesPage> {
       final notes = await _notesService.getNotes();
       setState(() {
         _notes = notes;
+        _applySearch();
         _isLoading = false;
       });
     } catch (e) {
@@ -377,10 +404,27 @@ class _NotesPageState extends State<NotesPage> {
             onPressed: _loadNotes,
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search notes...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+              ),
+            ),
+          ),
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _notes.isEmpty
+          : _filteredNotes.isEmpty
               ? const Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -400,12 +444,12 @@ class _NotesPageState extends State<NotesPage> {
                     ],
                   ),
                 )
-              : _buildGroupedNotesList(),
+              : _buildGroupedNotesList(_filteredNotes),
     );
   }
 
-  Widget _buildGroupedNotesList() {
-    final grouped = _groupNotesByDay(_notes);
+  Widget _buildGroupedNotesList(List<Note> notes) {
+    final grouped = _groupNotesByDay(notes);
     final sortedKeys = grouped.keys.toList()
       ..sort((a, b) => b.compareTo(a)); // Descending by date
     return ListView(

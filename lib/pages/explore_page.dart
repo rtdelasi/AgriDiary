@@ -46,16 +46,48 @@ class _ExplorePageState extends State<ExplorePage> {
     },
   ];
 
+  // Insights & Tips
+  final List<String> _tips = [
+    'Rotate your crops each season to improve soil health and yields.',
+    'Check the weather forecast before planting or harvesting.',
+    'Use organic compost to enrich your soil naturally.',
+    'Monitor your crops regularly for pests and diseases.',
+    'Water your crops early in the morning or late in the evening to reduce evaporation.',
+    'Keep records of your farming activities for better planning.',
+    'Join local farmer groups to share knowledge and resources.',
+  ];
+  int _currentTipIndex = 0;
+  late final PageController _tipPageController;
+
   @override
   void initState() {
     super.initState();
     _checkTodayActivity();
+    _tipPageController = PageController();
+    // Auto-rotate tips every 5 seconds
+    Future.microtask(_startTipRotation);
+  }
+
+  void _startTipRotation() async {
+    while (mounted) {
+      await Future.delayed(const Duration(seconds: 5));
+      if (!mounted) break;
+      setState(() {
+        _currentTipIndex = (_currentTipIndex + 1) % _tips.length;
+        _tipPageController.animateToPage(
+          _currentTipIndex,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      });
+    }
   }
 
   @override
   void dispose() {
     _cropPageController.dispose();
     _currentCropPageNotifier.dispose();
+    _tipPageController.dispose();
     super.dispose();
   }
 
@@ -122,6 +154,8 @@ class _ExplorePageState extends State<ExplorePage> {
                   _buildMyPlansSection(cardColor, textColor),
                   const SizedBox(height: 24),
                   _buildBestSellingCropsCarousel(cardColor, textColor),
+                  const SizedBox(height: 24),
+                  _buildInsightsTips(cardColor, textColor),
                 ]),
               ),
             ),
@@ -630,6 +664,78 @@ class _ExplorePageState extends State<ExplorePage> {
             dotColor: Colors.grey.shade400,
             size: 10,
             selectedSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInsightsTips(Color cardColor, Color textColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Insights & Tips',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: textColor,
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 90,
+          child: PageView.builder(
+            controller: _tipPageController,
+            itemCount: _tips.length,
+            onPageChanged: (index) => setState(() => _currentTipIndex = index),
+            itemBuilder: (context, index) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.lightbulb, color: Colors.amber, size: 32),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        _tips[index],
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: textColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+        Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(_tips.length, (i) => Container(
+              width: 8,
+              height: 8,
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: i == _currentTipIndex ? Colors.amber : Colors.grey.shade400,
+              ),
+            )),
           ),
         ),
       ],
