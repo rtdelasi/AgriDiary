@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.agridiary"
-        minSdk = 23
+        minSdk = 26
         targetSdk = flutter.targetSdkVersion.toInt()
         versionCode = flutter.versionCode.toInt()
         versionName = flutter.versionName

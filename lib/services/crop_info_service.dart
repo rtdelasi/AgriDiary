@@ -147,44 +147,59 @@ class CropInfoService {
       for (int i = 0; i < searchTerms.length; i++) {
         if (cropInfo.length >= 4) break;
 
-        try {
-          final response = await http.get(
-            Uri.parse('https://api.duckduckgo.com/?q=${Uri.encodeComponent(searchTerms[i])}&format=json'),
-            headers: {'User-Agent': 'AgriDiary/1.0'},
-          ).timeout(const Duration(seconds: 8));
+        const maxRetries = 1;
+        const retryDelay = Duration(seconds: 1);
+        
+        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+          try {
+            _logger.i('Fetching crop info for $cropName - search term ${i + 1} (attempt ${attempt + 1}/${maxRetries + 1})');
+            
+            final response = await http.get(
+              Uri.parse('https://api.duckduckgo.com/?q=${Uri.encodeComponent(searchTerms[i])}&format=json'),
+              headers: {'User-Agent': 'AgriDiary/1.0'},
+            ).timeout(const Duration(seconds: 20));
 
-          if (response.statusCode == 200) {
-            final data = json.decode(response.body);
-            if (data['Abstract'] != null) {
-              final abstract = data['Abstract'];
-              
-              switch (i) {
-                case 0:
-                  if (cropInfo['planting_time'] == null) {
-                    cropInfo['planting_time'] = _extractPlantingTime(abstract, cropName);
-                  }
-                  break;
-                case 1:
-                  if (cropInfo['water_requirements'] == null) {
-                    cropInfo['water_requirements'] = _extractWaterRequirements(abstract, cropName);
-                  }
-                  break;
-                case 2:
-                  if (cropInfo['fertilizer_needs'] == null) {
-                    cropInfo['fertilizer_needs'] = _extractFertilizerInfo(abstract, cropName);
-                  }
-                  break;
-                case 3:
-                  if (cropInfo['pest_risk'] == null) {
-                    cropInfo['pest_risk'] = _extractPestInfo(abstract, cropName);
-                  }
-                  break;
+            if (response.statusCode == 200) {
+              final data = json.decode(response.body);
+              if (data['Abstract'] != null) {
+                final abstract = data['Abstract'];
+                
+                switch (i) {
+                  case 0:
+                    if (cropInfo['planting_time'] == null) {
+                      cropInfo['planting_time'] = _extractPlantingTime(abstract, cropName);
+                    }
+                    break;
+                  case 1:
+                    if (cropInfo['water_requirements'] == null) {
+                      cropInfo['water_requirements'] = _extractWaterRequirements(abstract, cropName);
+                    }
+                    break;
+                  case 2:
+                    if (cropInfo['fertilizer_needs'] == null) {
+                      cropInfo['fertilizer_needs'] = _extractFertilizerInfo(abstract, cropName);
+                    }
+                    break;
+                  case 3:
+                    if (cropInfo['pest_risk'] == null) {
+                      cropInfo['pest_risk'] = _extractPestInfo(abstract, cropName);
+                    }
+                    break;
+                }
+                
+                _logger.i('Successfully fetched crop info for $cropName - search term ${i + 1}');
+                break; // Success, exit retry loop
               }
+            } else {
+              _logger.w('DuckDuckGo API returned status code: ${response.statusCode} for search term ${i + 1}');
+            }
+          } catch (e) {
+            _logger.w('Error fetching crop info for $cropName - search term ${i + 1} (attempt ${attempt + 1}): $e');
+            if (attempt < maxRetries) {
+              _logger.i('Retrying in ${retryDelay.inSeconds} seconds...');
+              await Future.delayed(retryDelay);
             }
           }
-        } catch (e) {
-          _logger.w('Error in search term $i: $e');
-          continue;
         }
       }
     } catch (e) {

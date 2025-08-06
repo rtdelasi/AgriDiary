@@ -77,45 +77,83 @@ class MarketService {
     return marketData;
   }
 
-  // Fetch from Alpha Vantage API
+  // Fetch from Alpha Vantage API with retry logic
   Future<MarketData?> _fetchFromAlphaVantage(String crop) async {
-    try {
-      // Alpha Vantage provides commodity data
-      final response = await http.get(
-        Uri.parse(
-          'https://www.alphavantage.co/query?function=COMMODITY&symbol=${crop.toUpperCase()}&apikey=$_alphaVantageApiKey'
-        ),
-        headers: {'User-Agent': 'AgriDiary/1.0'},
-      ).timeout(const Duration(seconds: 10));
+    const maxRetries = 2;
+    const retryDelay = Duration(seconds: 2);
+    
+    for (int attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        _logger.i('Attempting Alpha Vantage API call for $crop (attempt ${attempt + 1}/${maxRetries + 1})');
+        
+        // Alpha Vantage provides commodity data
+        final response = await http.get(
+          Uri.parse(
+            'https://www.alphavantage.co/query?function=COMMODITY&symbol=${crop.toUpperCase()}&apikey=$_alphaVantageApiKey'
+          ),
+          headers: {'User-Agent': 'AgriDiary/1.0'},
+        ).timeout(const Duration(seconds: 30));
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return _parseAlphaVantageData(data, crop);
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          final result = _parseAlphaVantageData(data, crop);
+          if (result != null) {
+            _logger.i('Successfully fetched Alpha Vantage data for $crop');
+            return result;
+          }
+        } else {
+          _logger.w('Alpha Vantage API returned status code: ${response.statusCode}');
+        }
+      } catch (e) {
+        _logger.w('Error fetching from Alpha Vantage (attempt ${attempt + 1}): $e');
+        if (attempt < maxRetries) {
+          _logger.i('Retrying in ${retryDelay.inSeconds} seconds...');
+          await Future.delayed(retryDelay);
+        }
       }
-    } catch (e) {
-      _logger.e('Error fetching from Alpha Vantage: $e');
     }
+    
+    _logger.e('Failed to fetch Alpha Vantage data for $crop after ${maxRetries + 1} attempts');
     return null;
   }
 
-  // Fetch from Quandl API
+  // Fetch from Quandl API with retry logic
   Future<MarketData?> _fetchFromQuandl(String crop) async {
-    try {
-      // Quandl provides agricultural commodity data
-      final response = await http.get(
-        Uri.parse(
-          'https://www.quandl.com/api/v3/datasets/ODA/${crop.toUpperCase()}_PRICE.json?api_key=$_quandlApiKey&limit=2'
-        ),
-        headers: {'User-Agent': 'AgriDiary/1.0'},
-      ).timeout(const Duration(seconds: 10));
+    const maxRetries = 2;
+    const retryDelay = Duration(seconds: 2);
+    
+    for (int attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        _logger.i('Attempting Quandl API call for $crop (attempt ${attempt + 1}/${maxRetries + 1})');
+        
+        // Quandl provides agricultural commodity data
+        final response = await http.get(
+          Uri.parse(
+            'https://www.quandl.com/api/v3/datasets/ODA/${crop.toUpperCase()}_PRICE.json?api_key=$_quandlApiKey&limit=2'
+          ),
+          headers: {'User-Agent': 'AgriDiary/1.0'},
+        ).timeout(const Duration(seconds: 30));
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return _parseQuandlData(data, crop);
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          final result = _parseQuandlData(data, crop);
+          if (result != null) {
+            _logger.i('Successfully fetched Quandl data for $crop');
+            return result;
+          }
+        } else {
+          _logger.w('Quandl API returned status code: ${response.statusCode}');
+        }
+      } catch (e) {
+        _logger.w('Error fetching from Quandl (attempt ${attempt + 1}): $e');
+        if (attempt < maxRetries) {
+          _logger.i('Retrying in ${retryDelay.inSeconds} seconds...');
+          await Future.delayed(retryDelay);
+        }
       }
-    } catch (e) {
-      _logger.e('Error fetching from Quandl: $e');
     }
+    
+    _logger.e('Failed to fetch Quandl data for $crop after ${maxRetries + 1} attempts');
     return null;
   }
 
