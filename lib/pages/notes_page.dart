@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/note.dart';
 import '../services/notes_service.dart';
 
@@ -112,52 +113,13 @@ class _NotesPageState extends State<NotesPage> {
     }
   }
 
-  void _showPhotoFullScreen(Note note) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(
-            title: Text(note.title),
-            backgroundColor: Colors.black,
-            foregroundColor: Colors.white,
-          ),
-          backgroundColor: Colors.black,
-          body: Center(
-            child: FutureBuilder<bool>(
-              future: _notesService.photoFileExists(note.filePath),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                }
-                if (snapshot.data == true) {
-                  return InteractiveViewer(
-                    child: Image.file(
-                      File(note.filePath),
-                      fit: BoxFit.contain,
-                    ),
-                  );
-                } else {
-                  return const Text(
-                    'Image not found',
-                    style: TextStyle(color: Colors.white),
-                  );
-                }
-              },
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Future<void> _deleteNote(Note note) async {
     try {
       await _notesService.deleteNote(note.id);
       await _loadNotes();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Note deleted')),
+          const SnackBar(content: Text('Note deleted successfully')),
         );
       }
     } catch (e) {
@@ -169,330 +131,336 @@ class _NotesPageState extends State<NotesPage> {
     }
   }
 
-  Future<void> _renameNote(Note note) async {
-    final TextEditingController titleController = TextEditingController(text: note.title);
-    
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Rename Note'),
-        content: TextField(
-          controller: titleController,
-          decoration: const InputDecoration(
-            labelText: 'Note Title',
-            hintText: 'Enter new title',
-          ),
-          autofocus: true,
-          onSubmitted: (value) {
-            if (value.trim().isNotEmpty) {
-              Navigator.of(context).pop(value.trim());
-            }
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final newTitle = titleController.text.trim();
-              if (newTitle.isNotEmpty) {
-                Navigator.of(context).pop(newTitle);
-              }
-            },
-            child: const Text('Rename'),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null && result.isNotEmpty && result != note.title) {
-      try {
-        await _notesService.updateNoteTitle(note.id, result);
-        await _loadNotes();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Note renamed successfully')),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error renaming note: $e')),
-          );
-        }
-      }
-    }
-  }
-
-  String _formatDuration(Duration? duration) {
-    if (duration == null) return 'Unknown duration';
-    final minutes = duration.inMinutes;
-    final seconds = duration.inSeconds % 60;
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
-  }
-
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final noteDate = DateTime(date.year, date.month, date.day);
-    
-    if (noteDate == today) {
-      return 'Today at ${DateFormat('HH:mm').format(date)}';
-    } else if (noteDate == today.subtract(const Duration(days: 1))) {
-      return 'Yesterday at ${DateFormat('HH:mm').format(date)}';
-    } else {
-      return DateFormat('MMM dd, yyyy HH:mm').format(date);
-    }
-  }
-
-  Map<String, List<Note>> _groupNotesByDay(List<Note> notes) {
-    final Map<String, List<Note>> grouped = {};
-    for (final note in notes) {
-      final dayKey = DateFormat('yyyy-MM-dd').format(note.date);
-      grouped.putIfAbsent(dayKey, () => []).add(note);
-    }
-    return grouped;
-  }
-
-  Widget _buildNoteCard(Note note) {
-    final isPlaying = _currentlyPlayingId == note.id;
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDarkMode ? Colors.grey[800] : Colors.white;
-    final textColor = isDarkMode ? Colors.white : Colors.black87;
-    
-    return Card(
-      margin: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 4,
-      ),
-      color: cardColor,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ListTile(
-            leading: CircleAvatar(
-              backgroundColor: note.type == 'audio' 
-                  ? Colors.green 
-                  : Colors.purple,
-              child: Icon(
-                note.type == 'audio' 
-                    ? Icons.mic 
-                    : Icons.camera_alt,
-                color: Colors.white,
-              ),
-            ),
-            title: Text(
-              note.title,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: textColor,
-              ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _formatDate(note.date),
-                  style: TextStyle(color: isDarkMode ? Colors.grey[300] : Colors.grey[600]),
-                ),
-                if (note.duration != null)
-                  Text(
-                    'Duration: ${_formatDuration(note.duration)}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
-                    ),
-                  ),
-              ],
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (note.type == 'audio')
-                  IconButton(
-                    icon: Icon(
-                      isPlaying ? Icons.stop : Icons.play_arrow,
-                      color: isPlaying ? Colors.red : Colors.green,
-                    ),
-                    onPressed: () => _playAudio(note),
-                  ),
-                IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.blue),
-                  onPressed: () => _renameNote(note),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _showDeleteDialog(note),
-                ),
-              ],
-            ),
-          ),
-          if (note.type == 'photo')
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: GestureDetector(
-                onTap: () => _showPhotoFullScreen(note),
-                child: Container(
-                  height: 200,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: FutureBuilder<bool>(
-                      future: _notesService.photoFileExists(note.filePath),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
-                        }
-                        if (snapshot.data == true) {
-                          return Image.file(
-                            File(note.filePath),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Center(
-                                child: Icon(
-                                  Icons.broken_image,
-                                  size: 50,
-                                  color: Colors.grey,
-                                ),
-                              );
-                            },
-                          );
-                        } else {
-                          return const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.broken_image,
-                                  size: 50,
-                                  color: Colors.grey,
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Image not found',
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notes'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadNotes,
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(56),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search notes...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
-              ),
-            ),
-          ),
-        ),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _filteredNotes.isEmpty
-              ? const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(Icons.note_add, size: 64, color: Colors.grey),
-                      SizedBox(height: 16),
                       Text(
-                        'No notes yet',
-                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                        'My Notes',
+                        style: GoogleFonts.inter(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.onSurface,
+                        ),
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Record audio or take photos using the buttons',
-                        style: TextStyle(color: Colors.grey),
-                        textAlign: TextAlign.center,
+                      IconButton(
+                        onPressed: _loadNotes,
+                        icon: Icon(
+                          Icons.refresh,
+                          color: theme.colorScheme.primary,
+                          size: 24,
+                        ),
                       ),
                     ],
                   ),
-                )
-              : _buildGroupedNotesList(_filteredNotes),
+                  const SizedBox(height: 16),
+                  // Search Bar
+                  Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                                                 BoxShadow(
+                           color: Colors.black.withValues(alpha: 0.05),
+                           blurRadius: 10,
+                           offset: const Offset(0, 2),
+                         ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search notes...',
+                        prefixIcon: Icon(
+                          Icons.search,
+                                                     color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Notes List
+            Expanded(
+              child: _isLoading
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: theme.colorScheme.primary,
+                      ),
+                    )
+                  : _filteredNotes.isEmpty
+                      ? _buildEmptyState(theme)
+                      : RefreshIndicator(
+                          onRefresh: _loadNotes,
+                          color: theme.colorScheme.primary,
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            itemCount: _filteredNotes.length,
+                            itemBuilder: (context, index) {
+                              return _buildNoteCard(_filteredNotes[index], theme);
+                            },
+                          ),
+                        ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildGroupedNotesList(List<Note> notes) {
-    final grouped = _groupNotesByDay(notes);
-    final sortedKeys = grouped.keys.toList()
-      ..sort((a, b) => b.compareTo(a)); // Descending by date
-    return ListView(
-      children: [
-        for (final dayKey in sortedKeys)
-          ExpansionTile(
-            title: Text(_formatDayHeader(dayKey)),
-            children: grouped[dayKey]!
-                .map((note) => _buildNoteCard(note))
-                .toList(),
+  Widget _buildEmptyState(ThemeData theme) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.note_alt_outlined,
+              size: 64,
+              color: theme.colorScheme.primary,
+            ),
           ),
-      ],
+          const SizedBox(height: 24),
+          Text(
+            'No notes yet',
+            style: GoogleFonts.inter(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Create your first note using the camera or microphone',
+            style: GoogleFonts.inter(
+              fontSize: 16,
+                                       color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 
-  String _formatDayHeader(String dayKey) {
-    final date = DateTime.parse(dayKey);
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    if (date == today) return 'Today';
-    if (date == yesterday) return 'Yesterday';
-    return DateFormat('MMM dd, yyyy').format(date);
-  }
+  Widget _buildNoteCard(Note note, ThemeData theme) {
+    final hasImages = note.images.isNotEmpty;
+    final hasRecordings = note.recordings.isNotEmpty;
+    final isPlaying = _currentlyPlayingId == note.id;
 
-  void _showDeleteDialog(Note note) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Note'),
-        content: Text('Are you sure you want to delete "${note.title}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+                                   BoxShadow(
+                           color: Colors.black.withValues(alpha: 0.05),
+                           blurRadius: 10,
+                           offset: const Offset(0, 4),
+                         ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Note Header
+          Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        note.title,
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    PopupMenuButton<String>(
+                      icon: Icon(
+                        Icons.more_vert,
+                                                   color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                      onSelected: (value) {
+                        if (value == 'delete') {
+                          _deleteNote(note);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.delete_outline,
+                                color: theme.colorScheme.error,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Delete',
+                                style: GoogleFonts.inter(
+                                  color: theme.colorScheme.error,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  DateFormat('MMM dd, yyyy • HH:mm').format(note.date),
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _deleteNote(note);
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
+          // Images Section
+          if (hasImages) ...[
+            Container(
+              height: 120,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: note.images.length,
+                itemBuilder: (context, index) {
+                  final image = note.images[index];
+                  return Container(
+                    width: 120,
+                    margin: const EdgeInsets.only(right: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                                                 BoxShadow(
+                           color: Colors.black.withValues(alpha: 0.1),
+                           blurRadius: 8,
+                           offset: const Offset(0, 2),
+                         ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        File(image.path),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                          child: Icon(
+                            Icons.image_not_supported,
+                            color: theme.colorScheme.outline,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          // Recordings Section
+          if (hasRecordings) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: note.recordings.map((recording) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                                                 color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => _playAudio(note),
+                          icon: Icon(
+                            isPlaying ? Icons.pause : Icons.play_arrow,
+                            color: theme.colorScheme.primary,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                recording.name,
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
+                              Text(
+                                'Audio recording',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (isPlaying)
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
         ],
       ),
     );

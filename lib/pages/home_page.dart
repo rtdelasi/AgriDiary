@@ -1,19 +1,20 @@
+import 'package:agridiary/models/notification.dart';
+import 'package:agridiary/pages/audio_recorder_page.dart';
 import 'package:agridiary/pages/camera_capture_page.dart';
 import 'package:agridiary/pages/explore_page.dart';
 import 'package:agridiary/pages/insights_page.dart';
 import 'package:agridiary/pages/notes_page.dart';
-import 'package:agridiary/pages/profile_page.dart';
 import 'package:agridiary/pages/notifications_page.dart';
-import 'package:agridiary/pages/audio_recorder_page.dart';
-import 'package:agridiary/providers/user_profile_provider.dart';
+import 'package:agridiary/pages/profile_page.dart';
 import 'package:agridiary/providers/notification_provider.dart';
+import 'package:agridiary/providers/user_profile_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as badges;
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:iconly/iconly.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/note.dart';
-import '../models/notification.dart';
 import '../widgets/app_drawer.dart';
 
 class HomePage extends StatefulWidget {
@@ -126,33 +127,46 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final userProfileProvider = Provider.of<UserProfileProvider>(context);
+    final theme = Theme.of(context);
 
     return Scaffold(
-      drawer: AppDrawer(onNavigation: _onDrawerNavigation),
-      appBar:
-          _selectedIndex == 0
-              ? AppBar(
-                centerTitle: false,
-                title: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Hi ${userProfileProvider.name.split(' ').first} 👋',
-                      style: Theme.of(context).textTheme.titleMedium,
+      drawer: AppDrawer(
+        onNavigation: _onDrawerNavigation,
+      ),
+      appBar: _selectedIndex == 0
+          ? AppBar(
+              centerTitle: false,
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Hi ${userProfileProvider.name.split(' ').first} 👋',
+                    style: GoogleFonts.inter(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.onSurface,
                     ),
-                    Text(
-                      _getGreeting(),
-                      style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  Text(
+                    _getGreeting(),
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
-                  ],
-                ),
-                actions: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 15.0),
-                    child: Consumer<NotificationProvider>(
-                      builder: (context, notificationProvider, child) {
-                        return IconButton.filledTonal(
-                          onPressed: () {
+                  ),
+                ],
+              ),
+              actions: [
+                Container(
+                  margin: const EdgeInsets.only(right: 16.0),
+                  child: Consumer<NotificationProvider>(
+                    builder: (context, notificationProvider, child) {
+                      return Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -160,45 +174,76 @@ class _HomePageState extends State<HomePage> {
                               ),
                             );
                           },
-                          icon: badges.Badge(
-                            badgeContent: Text(
-                              notificationProvider.unreadCount.toString(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: badges.Badge(
+                              badgeContent: Text(
+                                notificationProvider.unreadCount.toString(),
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              badgeStyle: badges.BadgeStyle(
+                                badgeColor: theme.colorScheme.primary,
+                                padding: const EdgeInsets.all(4),
+                              ),
+                              position: badges.BadgePosition.topEnd(
+                                top: -8,
+                                end: -8,
+                              ),
+                              showBadge: notificationProvider.unreadCount > 0,
+                              child: Icon(
+                                IconlyLight.notification,
+                                color: theme.colorScheme.onSurface,
+                                size: 24,
                               ),
                             ),
-                            badgeStyle: const badges.BadgeStyle(
-                              badgeColor: Colors.green,
-                            ),
-                            position: badges.BadgePosition.topEnd(
-                              top: -15,
-                              end: -12,
-                            ),
-                            showBadge: notificationProvider.unreadCount > 0,
-                            child: const Icon(IconlyLight.notification),
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
-                ],
-              )
-              : null,
+                ),
+              ],
+            )
+          : null,
       floatingActionButton: SpeedDial(
         animatedIcon: AnimatedIcons.menu_close,
-        animatedIconTheme: const IconThemeData(size: 22.0),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
+        animatedIconTheme: IconThemeData(
+          size: 22.0,
+          color: theme.colorScheme.onPrimary,
+        ),
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
         overlayColor: Colors.black,
-        overlayOpacity: 0.5,
+        overlayOpacity: 0.4,
         openCloseDial: isDialOpen,
-        spacing: 10,
-        spaceBetweenChildren: 10,
+        spacing: 16,
+        spaceBetweenChildren: 16,
         children: [
           SpeedDialChild(
-            child: const Icon(Icons.mic),
-            label: 'Record',
+            child: const Icon(Icons.mic, color: Colors.white),
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: Colors.white,
+            label: 'Record Audio',
+            labelStyle: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface,
+            ),
             onTap: () async {
               await Navigator.push(
                 context,
@@ -210,10 +255,15 @@ class _HomePageState extends State<HomePage> {
             },
           ),
           SpeedDialChild(
-            child: const Icon(Icons.camera_alt),
-            backgroundColor: Colors.purple,
-            label: 'Capture',
-            labelStyle: const TextStyle(fontSize: 16.0),
+            child: const Icon(Icons.camera_alt, color: Colors.white),
+            backgroundColor: theme.colorScheme.secondary,
+            foregroundColor: Colors.white,
+            label: 'Capture Photo',
+            labelStyle: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface,
+            ),
             onTap: () async {
               await Navigator.push(
                 context,
@@ -231,36 +281,101 @@ class _HomePageState extends State<HomePage> {
         onClose: () => isDialOpen.value = false,
       ),
       body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        type: BottomNavigationBarType.fixed,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.note_alt_outlined),
-            activeIcon: Icon(Icons.note_alt),
-            label: 'Notes',
+          child: BottomNavigationBar(
+            currentIndex: _selectedIndex,
+            onTap: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: theme.colorScheme.surface,
+            selectedItemColor: theme.colorScheme.primary,
+            unselectedItemColor: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            elevation: 0,
+            items: [
+              BottomNavigationBarItem(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: _selectedIndex == 0
+                        ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                        : Colors.transparent,
+                  ),
+                  child: Icon(
+                    _selectedIndex == 0 ? Icons.home : Icons.home_outlined,
+                    size: 24,
+                  ),
+                ),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: _selectedIndex == 1
+                        ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                        : Colors.transparent,
+                  ),
+                  child: Icon(
+                    _selectedIndex == 1 ? Icons.note_alt : Icons.note_alt_outlined,
+                    size: 24,
+                  ),
+                ),
+                label: 'Notes',
+              ),
+              BottomNavigationBarItem(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: _selectedIndex == 2
+                        ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                        : Colors.transparent,
+                  ),
+                  child: Icon(
+                    _selectedIndex == 2 ? Icons.insights : Icons.insights_outlined,
+                    size: 24,
+                  ),
+                ),
+                label: 'Insights',
+              ),
+              BottomNavigationBarItem(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: _selectedIndex == 3
+                        ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                        : Colors.transparent,
+                  ),
+                  child: Icon(
+                    _selectedIndex == 3 ? Icons.person : Icons.person_outline,
+                    size: 24,
+                  ),
+                ),
+                label: 'Profile',
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.insights_outlined),
-            activeIcon: Icon(Icons.insights),
-            label: 'Insights',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+        ),
       ),
     );
   }

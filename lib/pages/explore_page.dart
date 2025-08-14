@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:agridiary/models/task.dart';
 import 'package:provider/provider.dart';
 import 'package:agridiary/providers/task_provider.dart';
 import 'package:page_view_indicators/circle_page_indicator.dart';
@@ -102,21 +101,52 @@ class _ExplorePageState extends State<ExplorePage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Add a new task'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Add a new task',
+            style: GoogleFonts.inter(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           content: TextField(
             controller: taskController,
-            decoration: const InputDecoration(hintText: "Enter task title"),
+            decoration: InputDecoration(
+              hintText: "Enter task title",
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             autofocus: true,
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             ElevatedButton(
-              child: const Text('Add'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Add',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               onPressed: () {
                 if (taskController.text.isNotEmpty) {
                   taskProvider.addTask(taskController.text);
@@ -132,30 +162,26 @@ class _ExplorePageState extends State<ExplorePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode ? Colors.grey[900]! : Colors.grey[100]!;
-    final cardColor = isDarkMode ? Colors.grey[800]! : Colors.white;
-    final textColor = isDarkMode ? Colors.white : Colors.black87;
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(20.0),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  _buildWeatherSection(),
+                  _buildWeatherSection(theme),
                   const SizedBox(height: 24),
-                  _buildFarmerCard(),
+                  _buildFarmerCard(theme),
                   const SizedBox(height: 24),
-                  _buildMyPlansSection(cardColor, textColor),
+                  _buildMyPlansSection(theme),
                   const SizedBox(height: 24),
-                  _buildBestSellingCropsCarousel(cardColor, textColor),
+                  _buildBestSellingCropsCarousel(theme),
                   const SizedBox(height: 24),
-                  _buildInsightsTips(cardColor, textColor),
+                  _buildInsightsTips(theme),
                 ]),
               ),
             ),
@@ -165,7 +191,83 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 
-  Widget _buildFarmerCard() {
+  Widget _buildWeatherSection(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            theme.colorScheme.primary.withValues(alpha: 0.1),
+            theme.colorScheme.secondary.withValues(alpha: 0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.wb_sunny,
+              color: theme.colorScheme.primary,
+              size: 32,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Today\'s Weather',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Sunny • 28°C',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              'Perfect for farming',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFarmerCard(ThemeData theme) {
     return Container(
       height: 200,
       decoration: BoxDecoration(
@@ -173,8 +275,8 @@ class _ExplorePageState extends State<ExplorePage> {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -220,7 +322,7 @@ class _ExplorePageState extends State<ExplorePage> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.green.withValues(alpha: 0.9),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.9),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
@@ -234,7 +336,7 @@ class _ExplorePageState extends State<ExplorePage> {
                               const SizedBox(width: 6),
                               Text(
                                 'Active Farmer',
-                                style: GoogleFonts.lato(
+                                style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white,
@@ -264,7 +366,7 @@ class _ExplorePageState extends State<ExplorePage> {
                               const SizedBox(width: 6),
                               Text(
                                 '$_currentStreak days',
-                                style: GoogleFonts.lato(
+                                style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white,
@@ -278,7 +380,7 @@ class _ExplorePageState extends State<ExplorePage> {
                     const SizedBox(height: 12),
                     Text(
                       'Welcome to AgriDiary',
-                      style: GoogleFonts.lato(
+                      style: GoogleFonts.inter(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -287,7 +389,7 @@ class _ExplorePageState extends State<ExplorePage> {
                     const SizedBox(height: 4),
                     Text(
                       'Your digital farming companion',
-                      style: GoogleFonts.lato(
+                      style: GoogleFonts.inter(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.9),
                       ),
@@ -302,7 +404,7 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 
-  Widget _buildMyPlansSection(Color cardColor, Color textColor) {
+  Widget _buildMyPlansSection(ThemeData theme) {
     return Consumer<TaskProvider>(
       builder: (context, taskProvider, child) {
         return Column(
@@ -311,409 +413,299 @@ class _ExplorePageState extends State<ExplorePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'My Plans',
-                      style: GoogleFonts.lato(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
-                    ),
-                    Text(
-                      taskProvider.getCurrentDate(),
-                      style: GoogleFonts.lato(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
+                Text(
+                  'My Plans',
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.refresh,
-                        color: Colors.orange,
-                        size: 24,
-                      ),
-                      onPressed:
-                          () => _showResetConfirmationDialog(taskProvider),
-                      tooltip: 'Reset plans for today',
+                TextButton.icon(
+                  onPressed: () => _showAddTaskDialog(taskProvider),
+                  icon: Icon(
+                    Icons.add,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
+                  label: Text(
+                    'Add Task',
+                    style: GoogleFonts.inter(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
                     ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.add_circle,
-                        color: Colors.green,
-                        size: 30,
-                      ),
-                      onPressed: () => _showAddTaskDialog(taskProvider),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+            if (taskProvider.tasks.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
                   ),
-                ],
-              ),
-              child:
-                  taskProvider.tasks.isEmpty
-                      ? Column(
-                        children: [
-                          Icon(
-                            Icons.task_alt,
-                            size: 64,
-                            color: Colors.grey.shade400,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No plans for today',
-                            style: GoogleFonts.lato(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '      Add your daily farming tasks to get started!      ',
-                            style: GoogleFonts.lato(
-                              fontSize: 14,
-                              color: Colors.grey.shade500,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      )
-                      : ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: taskProvider.tasks.length,
-                        itemBuilder: (context, index) {
-                          final task = taskProvider.tasks[index];
-                          return _buildTaskItem(task, index, taskProvider);
-                        },
-                        separatorBuilder:
-                            (context, index) => const Divider(height: 24),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.task_alt,
+                      size: 48,
+                      color: theme.colorScheme.outline.withValues(alpha: 0.5),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No tasks yet',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
                       ),
-            ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Add your first farming task to get started',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              )
+            else
+              ...taskProvider.tasks.asMap().entries.map((entry) {
+                final index = entry.key;
+                final task = entry.value;
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          task.title,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => taskProvider.deleteTask(index),
+                        icon: Icon(
+                          Icons.delete_outline,
+                          color: theme.colorScheme.error,
+                          size: 20,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
           ],
         );
       },
     );
   }
 
-  void _showResetConfirmationDialog(TaskProvider taskProvider) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text(
-            'Reset Plans',
-            style: GoogleFonts.lato(fontWeight: FontWeight.bold),
-          ),
-          content: Text(
-            'Are you sure you want to clear all plans for today? This action cannot be undone.',
-            style: GoogleFonts.lato(),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: Colors.grey.shade600),
-              ),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Reset'),
-              onPressed: () {
-                taskProvider.resetTasksForToday();
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildTaskItem(Task task, int index, TaskProvider taskProvider) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDarkMode ? Colors.white : Colors.black87;
-    final completedTextColor = isDarkMode ? Colors.grey[400] : Colors.grey;
-
-    return InkWell(
-      onTap: () => taskProvider.toggleTaskCompletion(index),
-      child: Row(
-        children: [
-          Checkbox(
-            value: task.isCompleted,
-            onChanged:
-                (bool? value) => taskProvider.toggleTaskCompletion(index),
-            activeColor: Colors.green,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              task.title,
-              style: GoogleFonts.lato(
-                fontSize: 16,
-                decoration:
-                    task.isCompleted
-                        ? TextDecoration.lineThrough
-                        : TextDecoration.none,
-                color: task.isCompleted ? completedTextColor : textColor,
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-            onPressed: () => taskProvider.deleteTask(index),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWeatherSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.blue.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.wb_sunny, color: Colors.blue, size: 32),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Weather Forecast',
-                  style: GoogleFonts.lato(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue[700],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '24°C • Partly Cloudy',
-                  style: GoogleFonts.lato(
-                    fontSize: 14,
-                    color: Colors.blue[600],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Good conditions for outdoor farming activities',
-                  style: GoogleFonts.lato(
-                    fontSize: 12,
-                    color: Colors.blue[500],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.blue),
-            onPressed: () {
-              // Refresh weather data
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBestSellingCropsCarousel(Color cardColor, Color textColor) {
+  Widget _buildBestSellingCropsCarousel(ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Recommended Best-Selling Crops',
-          style: GoogleFonts.lato(
+          'Best Selling Crops',
+          style: GoogleFonts.inter(
             fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: textColor,
+            fontWeight: FontWeight.w700,
+            color: theme.colorScheme.onSurface,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         SizedBox(
-          height: 180,
+          height: 200,
           child: PageView.builder(
             controller: _cropPageController,
+            onPageChanged: (index) {
+              _currentCropPageNotifier.value = index;
+            },
             itemCount: _bestSellingCrops.length,
-            onPageChanged: (index) => _currentCropPageNotifier.value = index,
             itemBuilder: (context, index) {
               final crop = _bestSellingCrops[index];
               return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8),
+                margin: const EdgeInsets.symmetric(horizontal: 4),
                 decoration: BoxDecoration(
-                  color: cardColor,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.07),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
                     ),
                   ],
                 ),
-                child: Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        bottomLeft: Radius.circular(16),
-                      ),
-                      child: Image.asset(
-                        crop['image']!,
-                        width: 90,
-                        height: 180,
-                        fit: BoxFit.cover,
-                        errorBuilder:
-                            (context, error, stackTrace) => Container(
-                              width: 90,
-                              height: 180,
-                              color: Colors.grey.shade200,
-                              child: const Icon(
-                                Icons.image,
-                                size: 40,
-                                color: Colors.grey,
-                              ),
-                            ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              crop['name']!,
-                              style: GoogleFonts.lato(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: textColor,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              crop['desc']!,
-                              style: GoogleFonts.lato(
-                                fontSize: 14,
-                                color: textColor.withValues(alpha: 0.8),
-                              ),
-                            ),
-                          ],
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Image.asset(
+                          crop['image']!,
+                          fit: BoxFit.cover,
                         ),
                       ),
-                    ),
-                  ],
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.7),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                crop['name']!,
+                                style: GoogleFonts.inter(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                crop['desc']!,
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Center(
           child: CirclePageIndicator(
-            itemCount: _bestSellingCrops.length,
+            size: 8.0,
+            selectedSize: 10.0,
             currentPageNotifier: _currentCropPageNotifier,
-            selectedDotColor: Colors.green,
-            dotColor: Colors.grey.shade400,
-            size: 10,
-            selectedSize: 12,
+            itemCount: _bestSellingCrops.length,
+            selectedDotColor: theme.colorScheme.primary,
+            dotColor: theme.colorScheme.outline.withValues(alpha: 0.3),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildInsightsTips(Color cardColor, Color textColor) {
+  Widget _buildInsightsTips(ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Insights & Tips',
-          style: TextStyle(
+          'Farming Tips',
+          style: GoogleFonts.inter(
             fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: textColor,
+            fontWeight: FontWeight.w700,
+            color: theme.colorScheme.onSurface,
           ),
         ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 90,
+        const SizedBox(height: 16),
+        Container(
+          height: 120,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                theme.colorScheme.secondary.withValues(alpha: 0.1),
+                theme.colorScheme.primary.withValues(alpha: 0.1),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: theme.colorScheme.secondary.withValues(alpha: 0.2),
+            ),
+          ),
           child: PageView.builder(
             controller: _tipPageController,
             itemCount: _tips.length,
-            onPageChanged: (index) => setState(() => _currentTipIndex = index),
             itemBuilder: (context, index) {
               return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.lightbulb, color: Colors.amber, size: 32),
-                    const SizedBox(width: 16),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.lightbulb_outline,
+                          color: theme.colorScheme.secondary,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Tip ${index + 1}',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.secondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
                     Expanded(
                       child: Text(
                         _tips[index],
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           fontSize: 16,
-                          color: textColor,
+                          color: theme.colorScheme.onSurface,
+                          height: 1.4,
                         ),
                       ),
                     ),
@@ -721,21 +713,6 @@ class _ExplorePageState extends State<ExplorePage> {
                 ),
               );
             },
-          ),
-        ),
-        const SizedBox(height: 8),
-        Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(_tips.length, (i) => Container(
-              width: 8,
-              height: 8,
-              margin: const EdgeInsets.symmetric(horizontal: 2),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: i == _currentTipIndex ? Colors.amber : Colors.grey.shade400,
-              ),
-            )),
           ),
         ),
       ],
