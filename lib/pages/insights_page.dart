@@ -36,7 +36,8 @@ class _InsightsPageState extends State<InsightsPage> {
   final RainfallService _rainfallService = RainfallService();
   final MarketService _marketService = MarketService();
   final HarvestPlannerService _harvestPlannerService = HarvestPlannerService();
-  final AIHarvestPlannerService _aiHarvestPlannerService = AIHarvestPlannerService();
+  final AIHarvestPlannerService _aiHarvestPlannerService =
+      AIHarvestPlannerService();
   final Logger _logger = Logger();
 
   Map<String, String> _currentCropInfo = {};
@@ -534,27 +535,29 @@ class _InsightsPageState extends State<InsightsPage> {
           ),
           if (_aiInsights['recommendations'] != null) ...[
             const SizedBox(height: 8),
-            ...((_aiInsights['recommendations'] as List<dynamic>?) ?? []).take(2).map(
-              (rec) => Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.lightbulb, color: Colors.amber, size: 12),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        rec.toString(),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: textColor.withValues(alpha: 0.8),
+            ...((_aiInsights['recommendations'] as List<dynamic>?) ?? [])
+                .take(2)
+                .map(
+                  (rec) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.lightbulb, color: Colors.amber, size: 12),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            rec.toString(),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: textColor.withValues(alpha: 0.8),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
           ],
         ],
       ),
@@ -572,13 +575,7 @@ class _InsightsPageState extends State<InsightsPage> {
             color: color,
           ),
         ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            color: Colors.grey[600],
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 10, color: Colors.grey[600])),
       ],
     );
   }
@@ -1256,8 +1253,10 @@ class _InsightsPageState extends State<InsightsPage> {
     String selectedCrop = _crops[0];
     DateTime selectedDate = DateTime.now();
 
+    final BuildContext pageContext = context;
+
     showDialog(
-      context: context,
+      context: pageContext,
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
@@ -1269,107 +1268,113 @@ class _InsightsPageState extends State<InsightsPage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                    DropdownButtonFormField<String>(
-                      value: selectedCrop,
-                      decoration: const InputDecoration(labelText: 'Crop'),
-                      items:
-                          _crops
-                              .map(
-                                (crop) => DropdownMenuItem(
-                                  value: crop,
-                                  child: Text(crop),
-                                ),
-                              )
-                              .toList(),
-                      onChanged: (value) {
-                        selectedCrop = value!;
-                        setState(() {}); // Trigger rebuild
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: seedlingsController,
-                      decoration: const InputDecoration(
-                        labelText: 'Number of Seedlings',
+                      DropdownButtonFormField<String>(
+                        value: selectedCrop,
+                        decoration: const InputDecoration(labelText: 'Crop'),
+                        items:
+                            _crops
+                                .map(
+                                  (crop) => DropdownMenuItem(
+                                    value: crop,
+                                    child: Text(crop),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged: (value) {
+                          selectedCrop = value!;
+                          setState(() {}); // Trigger rebuild
+                        },
                       ),
-                      keyboardType: TextInputType.number,
-                    ),
-                    const SizedBox(height: 16),
-                    ListTile(
-                      title: const Text('Planting Date'),
-                      subtitle: Text(selectedDate.toString().split(' ')[0]),
-                      trailing: const Icon(Icons.calendar_today),
-                      onTap: () async {
-                        final date = await showDatePicker(
-                          context: dialogContext,
-                          initialDate: selectedDate,
-                          firstDate: DateTime.now().subtract(
-                            const Duration(days: 365),
-                          ),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
-                        );
-                        if (date != null) {
-                          setState(() {
-                            selectedDate = date;
-                          });
-                        }
-                      },
-                    ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: notesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Notes (Optional)',
-                  ),
-                  maxLines: 3,
-                ),
-              ],
-            ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (seedlingsController.text.isNotEmpty) {
-                  final seedlings = int.tryParse(seedlingsController.text);
-                  if (seedlings != null && seedlings > 0) {
-                    await _harvestPlannerService.createHarvestPlan(
-                      cropName: selectedCrop,
-                      plantedSeedlings: seedlings,
-                      plantingDate: selectedDate,
-                      notes: notesController.text,
-                    );
-                    await _loadHarvestData();
-                    if (!mounted) return;
-                    // Use try-catch to handle potential context issues
-                    try {
-                      Navigator.of(dialogContext).pop();
-                      // Show snackbar after dialog is closed
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Harvest plan created successfully!'),
-                              backgroundColor: Colors.green,
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: seedlingsController,
+                        decoration: const InputDecoration(
+                          labelText: 'Number of Seedlings',
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 16),
+                      ListTile(
+                        title: const Text('Planting Date'),
+                        subtitle: Text(selectedDate.toString().split(' ')[0]),
+                        trailing: const Icon(Icons.calendar_today),
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: dialogContext,
+                            initialDate: selectedDate,
+                            firstDate: DateTime.now().subtract(
+                              const Duration(days: 365),
+                            ),
+                            lastDate: DateTime.now().add(
+                              const Duration(days: 365),
                             ),
                           );
+                          if (date != null) {
+                            setState(() {
+                              selectedDate = date;
+                            });
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: notesController,
+                        decoration: const InputDecoration(
+                          labelText: 'Notes (Optional)',
+                        ),
+                        maxLines: 3,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (seedlingsController.text.isNotEmpty) {
+                      final seedlings = int.tryParse(seedlingsController.text);
+                      if (seedlings != null && seedlings > 0) {
+                        final navigator = Navigator.of(pageContext);
+                        final messenger = ScaffoldMessenger.of(pageContext);
+                        await _harvestPlannerService.createHarvestPlan(
+                          cropName: selectedCrop,
+                          plantedSeedlings: seedlings,
+                          plantingDate: selectedDate,
+                          notes: notesController.text,
+                        );
+                        await _loadHarvestData();
+                        if (!mounted) return;
+                        // Use try-catch to handle potential context issues
+                        try {
+                          navigator.pop();
+                          // Show snackbar after dialog is closed
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (mounted) {
+                              messenger.showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Harvest plan created successfully!',
+                                  ),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          });
+                        } catch (e) {
+                          // Dialog was already closed or context is invalid
+                          debugPrint('Dialog context is no longer valid: $e');
                         }
-                      });
-                    } catch (e) {
-                      // Dialog was already closed or context is invalid
-                      debugPrint('Dialog context is no longer valid: $e');
+                      }
                     }
-                  }
-                }
-              },
-              child: const Text('Create Plan'),
-            ),
-          ],
-        );
+                  },
+                  child: const Text('Create Plan'),
+                ),
+              ],
+            );
           },
         );
       },
@@ -1382,6 +1387,7 @@ class _InsightsPageState extends State<InsightsPage> {
     final TextEditingController notesController = TextEditingController();
     String selectedCrop = _crops[0];
     DateTime selectedDate = DateTime.now();
+    final BuildContext pageContext = context;
     bool isLoading = false;
     Map<String, dynamic>? aiPredictions;
 
@@ -1404,120 +1410,137 @@ class _InsightsPageState extends State<InsightsPage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                    DropdownButtonFormField<String>(
-                      value: selectedCrop,
-                      decoration: const InputDecoration(labelText: 'Crop'),
-                      items: _crops
-                          .map((crop) => DropdownMenuItem(
-                                value: crop,
-                                child: Text(crop),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        selectedCrop = value!;
-                        setState(() {}); // Trigger rebuild
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: seedlingsController,
-                      decoration: const InputDecoration(
-                        labelText: 'Number of Seedlings',
+                      DropdownButtonFormField<String>(
+                        value: selectedCrop,
+                        decoration: const InputDecoration(labelText: 'Crop'),
+                        items:
+                            _crops
+                                .map(
+                                  (crop) => DropdownMenuItem(
+                                    value: crop,
+                                    child: Text(crop),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged: (value) {
+                          selectedCrop = value!;
+                          setState(() {}); // Trigger rebuild
+                        },
                       ),
-                      keyboardType: TextInputType.number,
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: locationController,
-                      decoration: const InputDecoration(
-                        labelText: 'Location (for weather analysis)',
-                        hintText: 'e.g., New York, NY',
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ListTile(
-                      title: const Text('Target Harvest Date'),
-                      subtitle: Text(selectedDate.toString().split(' ')[0]),
-                      trailing: const Icon(Icons.calendar_today),
-                      onTap: () async {
-                        final date = await showDatePicker(
-                          context: dialogContext,
-                          initialDate: selectedDate,
-                          firstDate: DateTime.now().add(const Duration(days: 30)),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
-                        );
-                        if (date != null) {
-                          setState(() {
-                            selectedDate = date;
-                          });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: notesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Notes (Optional)',
-                      ),
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: 16),
-                    if (isLoading) ...[
-                      const Center(child: CircularProgressIndicator()),
-                      const SizedBox(height: 8),
-                      const Text('Analyzing optimal planting conditions...'),
-                    ],
-                    if (aiPredictions != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.purple.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.purple.withValues(alpha: 0.3)),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: seedlingsController,
+                        decoration: const InputDecoration(
+                          labelText: 'Number of Seedlings',
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.psychology, color: Colors.purple, size: 16),
-                                const SizedBox(width: 8),
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: locationController,
+                        decoration: const InputDecoration(
+                          labelText: 'Location (for weather analysis)',
+                          hintText: 'e.g., New York, NY',
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ListTile(
+                        title: const Text('Target Harvest Date'),
+                        subtitle: Text(selectedDate.toString().split(' ')[0]),
+                        trailing: const Icon(Icons.calendar_today),
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: dialogContext,
+                            initialDate: selectedDate,
+                            firstDate: DateTime.now().add(
+                              const Duration(days: 30),
+                            ),
+                            lastDate: DateTime.now().add(
+                              const Duration(days: 365),
+                            ),
+                          );
+                          if (date != null) {
+                            setState(() {
+                              selectedDate = date;
+                            });
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: notesController,
+                        decoration: const InputDecoration(
+                          labelText: 'Notes (Optional)',
+                        ),
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: 16),
+                      if (isLoading) ...[
+                        const Center(child: CircularProgressIndicator()),
+                        const SizedBox(height: 8),
+                        const Text('Analyzing optimal planting conditions...'),
+                      ],
+                      if (aiPredictions != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.purple.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Colors.purple.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.psychology,
+                                    color: Colors.purple,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'AI Predictions',
+                                    style: TextStyle(
+                                      color: Colors.purple[700],
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Optimal Planting: ${(aiPredictions?['optimalPlantingDate'] as DateTime?)?.toString().split(' ')[0] ?? 'N/A'}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              Text(
+                                'Predicted Yield: ${(aiPredictions?['predictedYield'] as double?)?.toStringAsFixed(2) ?? 'N/A'}kg per plant',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              Text(
+                                'Confidence: ${(((aiPredictions?['confidence'] as double?) ?? 0.0) * 100).toStringAsFixed(1)}%',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              if (aiPredictions?['riskFactors'] != null &&
+                                  (aiPredictions!['riskFactors'] as Map)
+                                      .isNotEmpty) ...[
+                                const SizedBox(height: 4),
                                 Text(
-                                  'AI Predictions',
+                                  'Risk Factors: ${(aiPredictions!['riskFactors'] as Map).keys.join(', ')}',
                                   style: TextStyle(
-                                    color: Colors.purple[700],
-                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11,
+                                    color: Colors.orange[700],
                                   ),
                                 ),
                               ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Optimal Planting: ${(aiPredictions?['optimalPlantingDate'] as DateTime?)?.toString().split(' ')[0] ?? 'N/A'}',
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                            Text(
-                              'Predicted Yield: ${(aiPredictions?['predictedYield'] as double?)?.toStringAsFixed(2) ?? 'N/A'}kg per plant',
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                            Text(
-                              'Confidence: ${(((aiPredictions?['confidence'] as double?) ?? 0.0) * 100).toStringAsFixed(1)}%',
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                            if (aiPredictions?['riskFactors'] != null && 
-                                (aiPredictions!['riskFactors'] as Map).isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                'Risk Factors: ${(aiPredictions!['riskFactors'] as Map).keys.join(', ')}',
-                                style: TextStyle(fontSize: 11, color: Colors.orange[700]),
-                              ),
                             ],
-                          ],
+                          ),
                         ),
-                      ),
+                      ],
                     ],
-                  ],
-                ),
+                  ),
                 ),
               ),
               actions: [
@@ -1526,39 +1549,49 @@ class _InsightsPageState extends State<InsightsPage> {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: isLoading ? null : () async {
-                    if (seedlingsController.text.isNotEmpty && locationController.text.isNotEmpty) {
-                      setState(() {
-                        isLoading = true;
-                      });
-                      
-                      try {
-                        // Get AI predictions
-                        final predictions = await _aiHarvestPlannerService.predictOptimalPlantingTime(
-                          cropName: selectedCrop,
-                          location: locationController.text,
-                          targetHarvestDate: selectedDate,
-                        );
-                        
-                        setState(() {
-                          aiPredictions = predictions;
-                          isLoading = false;
-                        });
-                      } catch (e) {
-                        setState(() {
-                          isLoading = false;
-                        });
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Error getting AI predictions: $e'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      }
-                    }
-                  },
+                  onPressed:
+                      isLoading
+                          ? null
+                          : () async {
+                            if (seedlingsController.text.isNotEmpty &&
+                                locationController.text.isNotEmpty) {
+                              setState(() {
+                                isLoading = true;
+                              });
+
+                              try {
+                                // Get AI predictions
+                                final predictions =
+                                    await _aiHarvestPlannerService
+                                        .predictOptimalPlantingTime(
+                                          cropName: selectedCrop,
+                                          location: locationController.text,
+                                          targetHarvestDate: selectedDate,
+                                        );
+
+                                setState(() {
+                                  aiPredictions = predictions;
+                                  isLoading = false;
+                                });
+                              } catch (e) {
+                                setState(() {
+                                  isLoading = false;
+                                });
+                                if (mounted) {
+                                  ScaffoldMessenger.of(
+                                    pageContext,
+                                  ).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Error getting AI predictions: $e',
+                                      ),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+                          },
                   child: const Text('Analyze'),
                 ),
                 if (aiPredictions != null)
@@ -1566,10 +1599,15 @@ class _InsightsPageState extends State<InsightsPage> {
                     onPressed: () async {
                       final seedlings = int.tryParse(seedlingsController.text);
                       if (seedlings != null && seedlings > 0) {
+                        final navigator = Navigator.of(pageContext);
+                        final messenger = ScaffoldMessenger.of(pageContext);
                         await _aiHarvestPlannerService.createAIHarvestPlan(
                           cropName: selectedCrop,
                           plantedSeedlings: seedlings,
-                          plantingDate: aiPredictions?['optimalPlantingDate'] as DateTime? ?? DateTime.now(),
+                          plantingDate:
+                              aiPredictions?['optimalPlantingDate']
+                                  as DateTime? ??
+                              DateTime.now(),
                           location: locationController.text,
                           notes: notesController.text,
                         );
@@ -1577,13 +1615,15 @@ class _InsightsPageState extends State<InsightsPage> {
                         await _loadAIData();
                         if (!mounted) return;
                         try {
-                          Navigator.of(dialogContext).pop();
+                          navigator.pop();
                           // Show snackbar after dialog is closed
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              messenger.showSnackBar(
                                 const SnackBar(
-                                  content: Text('AI-powered harvest plan created successfully!'),
+                                  content: Text(
+                                    'AI-powered harvest plan created successfully!',
+                                  ),
                                   backgroundColor: Colors.purple,
                                 ),
                               );
@@ -1594,7 +1634,9 @@ class _InsightsPageState extends State<InsightsPage> {
                         }
                       }
                     },
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                    ),
                     child: const Text('Create AI Plan'),
                   ),
               ],

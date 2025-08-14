@@ -58,7 +58,7 @@ class InventoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Card(
       child: InkWell(
         onTap: onTap,
@@ -78,22 +78,20 @@ class InventoryCard extends StatelessWidget {
                       color: colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: imagePath != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.asset(
-                              imagePath!,
-                              fit: BoxFit.cover,
+                    child:
+                        imagePath != null
+                            ? ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.asset(imagePath!, fit: BoxFit.cover),
+                            )
+                            : Icon(
+                              Icons.agriculture,
+                              color: colorScheme.onPrimaryContainer,
+                              size: 24,
                             ),
-                          )
-                        : Icon(
-                            Icons.agriculture,
-                            color: colorScheme.onPrimaryContainer,
-                            size: 24,
-                          ),
                   ),
                   const SizedBox(width: 12),
-                  
+
                   // Crop Info
                   Expanded(
                     child: Column(
@@ -115,15 +113,18 @@ class InventoryCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  
+
                   // Status Indicator
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(status).withOpacity(0.1),
+                      color: _getStatusColor(status).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: _getStatusColor(status).withOpacity(0.3),
+                        color: _getStatusColor(status).withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -147,7 +148,7 @@ class InventoryCard extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               // Action Buttons
               if (onEdit != null || onDelete != null) ...[
                 const SizedBox(height: 12),
@@ -225,23 +226,15 @@ class _AnimatedInventoryCardState extends State<AnimatedInventoryCard>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutBack,
-    ));
-    
-    _opacityAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeIn,
-    ));
-    
+
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
+    );
+
+    _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
+
     _animationController.forward();
   }
 
@@ -275,4 +268,4 @@ class _AnimatedInventoryCardState extends State<AnimatedInventoryCard>
       },
     );
   }
-} 
+}
