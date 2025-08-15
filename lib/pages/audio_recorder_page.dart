@@ -136,11 +136,48 @@ class _AudioRecorderPageState extends State<AudioRecorderPage> {
     if (_audioPath == null) return;
 
     setState(() => _isSaving = true);
-    
+
     try {
-      final note = await _notesService.createAudioNote(_audioPath!, _recordDuration);
+      // Prompt for a display name before saving
+      String? displayName;
+      if (mounted) {
+        displayName = await showDialog<String?>(
+          context: context,
+          builder: (dialogContext) {
+            final controller = TextEditingController();
+            return AlertDialog(
+              title: const Text('Name this recording'),
+              content: TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  hintText: 'Enter a name (optional)',
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(null),
+                  child: const Text('Skip'),
+                ),
+                ElevatedButton(
+                  onPressed:
+                      () => Navigator.of(
+                        dialogContext,
+                      ).pop(controller.text.trim()),
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      }
+
+      final note = await _notesService.createAudioNote(
+        _audioPath!,
+        _recordDuration,
+        displayName: displayName,
+      );
       widget.onSave(note);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Audio note saved successfully!')),
@@ -149,9 +186,9 @@ class _AudioRecorderPageState extends State<AudioRecorderPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving note: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving note: $e')));
       }
     } finally {
       setState(() => _isSaving = false);
@@ -161,25 +198,28 @@ class _AudioRecorderPageState extends State<AudioRecorderPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Record Audio'),
-      ),
+      appBar: AppBar(title: const Text('Record Audio')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              _isRecording ? Icons.mic : (_isPlayback ? Icons.play_circle : Icons.mic_none),
+              _isRecording
+                  ? Icons.mic
+                  : (_isPlayback ? Icons.play_circle : Icons.mic_none),
               size: 80,
-              color: _isRecording ? Colors.red : (_isPlayback ? Colors.green : Colors.grey),
+              color:
+                  _isRecording
+                      ? Colors.red
+                      : (_isPlayback ? Colors.green : Colors.grey),
             ),
             const SizedBox(height: 20),
             Text(
               _isRecording
                   ? 'Recording...'
                   : _isPlayback
-                      ? 'Playback'
-                      : 'Ready to record',
+                  ? 'Playback'
+                  : 'Ready to record',
               style: const TextStyle(fontSize: 20),
             ),
             const SizedBox(height: 10),
@@ -204,7 +244,10 @@ class _AudioRecorderPageState extends State<AudioRecorderPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
-                        icon: Icon(_isPlaying ? Icons.stop : Icons.play_arrow, size: 40),
+                        icon: Icon(
+                          _isPlaying ? Icons.stop : Icons.play_arrow,
+                          size: 40,
+                        ),
                         onPressed: _isPlaying ? _stopAudio : _playAudio,
                       ),
                     ],
@@ -223,7 +266,9 @@ class _AudioRecorderPageState extends State<AudioRecorderPage> {
                         icon: const Icon(Icons.replay),
                         label: const Text('Record Again'),
                         onPressed: _resetRecording,
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
                       ),
                     ],
                   ),

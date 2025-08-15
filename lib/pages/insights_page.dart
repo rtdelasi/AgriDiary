@@ -1559,7 +1559,12 @@ class _InsightsPageState extends State<InsightsPage> {
                                 isLoading = true;
                               });
 
+                              ScaffoldMessengerState? messenger;
                               try {
+                                // Capture messenger before the async call to avoid
+                                // using a BuildContext across an async gap.
+                                messenger = ScaffoldMessenger.of(pageContext);
+
                                 // Get AI predictions
                                 final predictions =
                                     await _aiHarvestPlannerService
@@ -1578,9 +1583,7 @@ class _InsightsPageState extends State<InsightsPage> {
                                   isLoading = false;
                                 });
                                 if (mounted) {
-                                  ScaffoldMessenger.of(
-                                    pageContext,
-                                  ).showSnackBar(
+                                  messenger?.showSnackBar(
                                     SnackBar(
                                       content: Text(
                                         'Error getting AI predictions: $e',

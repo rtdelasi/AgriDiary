@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 class ChartExample extends StatelessWidget {
   final Color chartPrimaryColor = Colors.blue;
 
+  const ChartExample({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

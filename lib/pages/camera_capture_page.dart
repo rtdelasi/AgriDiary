@@ -51,20 +51,59 @@ class _CameraCapturePageState extends State<CameraCapturePage> {
       await _initializeControllerFuture;
 
       final directory = await getTemporaryDirectory();
-      final filePath = '${directory.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final filePath =
+          '${directory.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
 
       final image = await _controller.takePicture();
       await image.saveTo(filePath);
 
+      // Prompt for a display name before saving
+      String? displayName;
+      if (mounted) {
+        displayName = await showDialog<String?>(
+          context: context,
+          builder: (dialogContext) {
+            final controller = TextEditingController();
+            return AlertDialog(
+              title: const Text('Name this photo'),
+              content: TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  hintText: 'Enter a name (optional)',
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(null),
+                  child: const Text('Skip'),
+                ),
+                ElevatedButton(
+                  onPressed:
+                      () => Navigator.of(
+                        dialogContext,
+                      ).pop(controller.text.trim()),
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      }
+
       // Save as note with picked image
-      final note = await _notesService.createPhotoNote(filePath);
+      final note = await _notesService.createPhotoNote(
+        filePath,
+        displayName: displayName,
+      );
       widget.onImageCaptured(note);
-      
+
       if (!mounted) return;
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error capturing image: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error capturing image: $e')));
     } finally {
       setState(() => _isCapturing = false);
     }

@@ -153,31 +153,39 @@ class _WeatherWidgetState extends State<WeatherWidget> {
     }
   }
 
-  Future<void> _handleWeatherChange(String newWeather, double? temperature) async {
+  Future<void> _handleWeatherChange(
+    String newWeather,
+    double? temperature,
+  ) async {
     String alertTitle = 'Weather Change Alert';
     String alertMessage = 'Weather has changed to: $newWeather';
-    
-    if (newWeather.toLowerCase().contains('rain') || 
+
+    if (newWeather.toLowerCase().contains('rain') ||
         newWeather.toLowerCase().contains('shower') ||
         newWeather.toLowerCase().contains('drizzle')) {
       alertTitle = 'Rain Alert';
-      alertMessage = 'Rain detected in your area. Consider protecting sensitive crops and adjusting irrigation.';
-    } else if (newWeather.toLowerCase().contains('storm') || 
-               newWeather.toLowerCase().contains('thunder')) {
+      alertMessage =
+          'Rain detected in your area. Consider protecting sensitive crops and adjusting irrigation.';
+    } else if (newWeather.toLowerCase().contains('storm') ||
+        newWeather.toLowerCase().contains('thunder')) {
       alertTitle = 'Storm Alert';
-      alertMessage = 'Storm conditions detected. Secure equipment and protect crops from potential damage.';
-    } else if (newWeather.toLowerCase().contains('snow') || 
-               newWeather.toLowerCase().contains('frost')) {
+      alertMessage =
+          'Storm conditions detected. Secure equipment and protect crops from potential damage.';
+    } else if (newWeather.toLowerCase().contains('snow') ||
+        newWeather.toLowerCase().contains('frost')) {
       alertTitle = 'Cold Weather Alert';
-      alertMessage = 'Cold weather detected. Protect frost-sensitive crops and consider covering plants.';
-    } else if (newWeather.toLowerCase().contains('sunny') || 
-               newWeather.toLowerCase().contains('clear')) {
+      alertMessage =
+          'Cold weather detected. Protect frost-sensitive crops and consider covering plants.';
+    } else if (newWeather.toLowerCase().contains('sunny') ||
+        newWeather.toLowerCase().contains('clear')) {
       alertTitle = 'Clear Weather Alert';
-      alertMessage = 'Clear weather conditions. Good time for outdoor farming activities and crop monitoring.';
-    } else if (newWeather.toLowerCase().contains('cloudy') || 
-               newWeather.toLowerCase().contains('overcast')) {
+      alertMessage =
+          'Clear weather conditions. Good time for outdoor farming activities and crop monitoring.';
+    } else if (newWeather.toLowerCase().contains('cloudy') ||
+        newWeather.toLowerCase().contains('overcast')) {
       alertTitle = 'Cloudy Weather Alert';
-      alertMessage = 'Cloudy conditions detected. Monitor light-sensitive crops and adjust watering schedules.';
+      alertMessage =
+          'Cloudy conditions detected. Monitor light-sensitive crops and adjust watering schedules.';
     }
 
     // Add temperature information if available
@@ -186,7 +194,11 @@ class _WeatherWidgetState extends State<WeatherWidget> {
     }
 
     // Send real-time notification
-    await _notificationService.showImmediateNotification(alertTitle, alertMessage, 'weather_alert');
+    await _notificationService.showImmediateNotification(
+      alertTitle,
+      alertMessage,
+      'weather_alert',
+    );
   }
 
   Widget _buildLoadingWidget() {
@@ -234,12 +246,16 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                     icon: const Icon(Icons.settings),
                     label: const Text('Open App Settings'),
                     onPressed: () async {
+                      ScaffoldMessengerState? messenger;
                       try {
+                        messenger = ScaffoldMessenger.of(context);
                         await openAppSettings();
                       } catch (e) {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Could not open app settings.')),
+                          messenger?.showSnackBar(
+                            const SnackBar(
+                              content: Text('Could not open app settings.'),
+                            ),
                           );
                         }
                       }

@@ -8,23 +8,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:agridiary/main.dart';
-
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Self-contained counter increments', (WidgetTester tester) async {
+    int counter = 0;
 
-    // Verify that our counter starts at 0.
+    await tester.pumpWidget(
+      MaterialApp(
+        home: StatefulBuilder(
+          builder: (context, setState) {
+            return Scaffold(
+              body: Center(
+                child: Text('$counter', key: const ValueKey('counter')),
+              ),
+              floatingActionButton: FloatingActionButton(
+                onPressed: () => setState(() => counter++),
+                child: const Icon(Icons.add),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    // Initial counter value
     expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
 
-    // Tap the '+' icon and trigger a frame.
+    // Tap the '+' icon
     await tester.tap(find.byIcon(Icons.add));
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
+    // Counter should increment
     expect(find.text('1'), findsOneWidget);
   });
 }

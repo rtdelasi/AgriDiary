@@ -71,14 +71,28 @@ class _ExplorePageState extends State<ExplorePage> {
     while (mounted) {
       await Future.delayed(const Duration(seconds: 5));
       if (!mounted) break;
-      setState(() {
-        _currentTipIndex = (_currentTipIndex + 1) % _tips.length;
-        _tipPageController.animateToPage(
-          _currentTipIndex,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOut,
-        );
-      });
+      final nextIndex = (_currentTipIndex + 1) % _tips.length;
+      // Update the visible index first
+      if (mounted) {
+        setState(() {
+          _currentTipIndex = nextIndex;
+        });
+      }
+
+      // Animate the PageView only if the controller has clients (is attached)
+      if (_tipPageController.hasClients) {
+        try {
+          await _tipPageController.animateToPage(
+            nextIndex,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        } catch (e) {
+          // If animation fails because the controller is not attached anymore,
+          // just ignore and continue the loop.
+          debugPrint('Tip page animation skipped: $e');
+        }
+      }
     }
   }
 
@@ -106,10 +120,7 @@ class _ExplorePageState extends State<ExplorePage> {
           ),
           title: Text(
             'Add a new task',
-            style: GoogleFonts.inter(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
+            style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700),
           ),
           content: TextField(
             controller: taskController,
@@ -125,9 +136,7 @@ class _ExplorePageState extends State<ExplorePage> {
             TextButton(
               child: Text(
                 'Cancel',
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
               ),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -143,9 +152,7 @@ class _ExplorePageState extends State<ExplorePage> {
               ),
               child: Text(
                 'Add',
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
               ),
               onPressed: () {
                 if (taskController.text.isNotEmpty) {
@@ -322,7 +329,9 @@ class _ExplorePageState extends State<ExplorePage> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.9),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.9,
+                            ),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
@@ -470,7 +479,9 @@ class _ExplorePageState extends State<ExplorePage> {
                       'Add your first farming task to get started',
                       style: GoogleFonts.inter(
                         fontSize: 14,
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.7,
+                        ),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -481,46 +492,130 @@ class _ExplorePageState extends State<ExplorePage> {
               ...taskProvider.tasks.asMap().entries.map((entry) {
                 final index = entry.key;
                 final task = entry.value;
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                return Dismissible(
+                  key: ValueKey('${task.title}-$index'),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.error,
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    child: Icon(Icons.delete, color: Colors.white),
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary,
-                          shape: BoxShape.circle,
+                  onDismissed: (_) {
+                    final removedTask = task;
+                    final removedIndex = index;
+                    taskProvider.deleteTask(index);
+                    final messenger = ScaffoldMessenger.of(context);
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text('Deleted "${removedTask.title}"'),
+                        action: SnackBarAction(
+                          label: 'Undo',
+                          onPressed: () {
+                            taskProvider.restoreTask(removedTask, removedIndex);
+                          },
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          task.title,
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: theme.colorScheme.onSurface,
+                    );
+                  },
+                  child: AnimatedSize(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: 0.1,
                           ),
                         ),
                       ),
-                      IconButton(
-                        onPressed: () => taskProvider.deleteTask(index),
-                        icon: Icon(
-                          Icons.delete_outline,
-                          color: theme.colorScheme.error,
-                          size: 20,
-                        ),
+                      child: Row(
+                        children: [
+                          // Checkbox to mark task complete
+                          Checkbox(
+                            value: task.isCompleted,
+                            onChanged: (val) {
+                              // Toggle and show undo
+                              taskProvider.toggleTaskCompletion(index);
+                              final messenger = ScaffoldMessenger.of(context);
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    task.isCompleted
+                                        ? 'Marked "${task.title}" incomplete'
+                                        : 'Marked "${task.title}" complete',
+                                  ),
+                                  action: SnackBarAction(
+                                    label: 'Undo',
+                                    onPressed: () {
+                                      // Revert the toggle
+                                      taskProvider.toggleTaskCompletion(index);
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                            activeColor: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: AnimatedDefaultTextStyle(
+                              duration: const Duration(milliseconds: 250),
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color:
+                                    task.isCompleted
+                                        ? theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.5)
+                                        : theme.colorScheme.onSurface,
+                                decoration:
+                                    task.isCompleted
+                                        ? TextDecoration.lineThrough
+                                        : null,
+                              ),
+                              child: Text(task.title),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              final removedTask = task;
+                              final removedIndex = index;
+                              taskProvider.deleteTask(index);
+                              final messenger = ScaffoldMessenger.of(context);
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Deleted "${removedTask.title}"',
+                                  ),
+                                  action: SnackBarAction(
+                                    label: 'Undo',
+                                    onPressed: () {
+                                      taskProvider.restoreTask(
+                                        removedTask,
+                                        removedIndex,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                            icon: Icon(
+                              Icons.delete_outline,
+                              color: theme.colorScheme.error,
+                              size: 20,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 );
               }),
@@ -570,10 +665,7 @@ class _ExplorePageState extends State<ExplorePage> {
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: Image.asset(
-                          crop['image']!,
-                          fit: BoxFit.cover,
-                        ),
+                        child: Image.asset(crop['image']!, fit: BoxFit.cover),
                       ),
                       Positioned.fill(
                         child: Container(

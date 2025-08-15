@@ -19,8 +19,11 @@ class TaskProvider with ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       final lastResetDate = prefs.getString(_lastResetDateKey);
-      final today = DateTime.now().toIso8601String().split('T')[0]; // Get YYYY-MM-DD format
-      
+      final today =
+          DateTime.now().toIso8601String().split(
+            'T',
+          )[0]; // Get YYYY-MM-DD format
+
       // If no last reset date or it's a different day, reset tasks
       if (lastResetDate == null || lastResetDate != today) {
         _tasks.clear();
@@ -38,17 +41,18 @@ class TaskProvider with ChangeNotifier {
     try {
       // First check if we need to reset for a new day
       await _checkAndResetDaily();
-      
+
       final prefs = await SharedPreferences.getInstance();
       final tasksJson = prefs.getStringList(_storageKey) ?? [];
-      
-      _tasks = tasksJson
-          .map((taskJson) => Task.fromJson(json.decode(taskJson)))
-          .toList();
-      
+
+      _tasks =
+          tasksJson
+              .map((taskJson) => Task.fromJson(json.decode(taskJson)))
+              .toList();
+
       // If no tasks are saved, start with empty list
       // No default tasks - user will add their own tasks
-      
+
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading tasks: $e');
@@ -62,9 +66,8 @@ class TaskProvider with ChangeNotifier {
   Future<void> _saveTasks() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final tasksJson = _tasks
-          .map((task) => json.encode(task.toJson()))
-          .toList();
+      final tasksJson =
+          _tasks.map((task) => json.encode(task.toJson())).toList();
       await prefs.setStringList(_storageKey, tasksJson);
     } catch (e) {
       debugPrint('Error saving tasks: $e');
@@ -96,6 +99,17 @@ class TaskProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Restore a previously deleted task at a specific index (used for undo)
+  void restoreTask(Task task, int index) {
+    if (index < 0 || index > _tasks.length) {
+      _tasks.add(task);
+    } else {
+      _tasks.insert(index, task);
+    }
+    _saveTasks();
+    notifyListeners();
+  }
+
   void toggleTaskCompletion(int index) {
     _tasks[index] = Task(
       title: _tasks[index].title,
@@ -105,4 +119,4 @@ class TaskProvider with ChangeNotifier {
     _saveTasks();
     notifyListeners();
   }
-} 
+}
