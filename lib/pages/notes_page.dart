@@ -25,8 +25,6 @@ class _NotesPageState extends State<NotesPage> {
   Duration _currentDuration = Duration.zero;
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<Duration>? _durationSubscription;
-  final Set<String> _selectedNoteIds = <String>{};
-  bool _selectionMode = false;
   bool _isLoading = true;
   String _searchQuery = '';
 
@@ -309,86 +307,23 @@ class _NotesPageState extends State<NotesPage> {
                       ),
                       Row(
                         children: [
-                          if (_selectionMode) ...[
-                            IconButton(
-                              onPressed: () {
-                                // toggle select all
-                                _toggleSelectAll();
-                              },
-                              icon: Icon(
-                                _selectedNoteIds.length ==
-                                            _filteredNotes.length &&
-                                        _filteredNotes.isNotEmpty
-                                    ? Icons.check_box
-                                    : Icons.check_box_outline_blank,
-                                color: theme.colorScheme.primary,
-                                size: 24,
-                              ),
-                              tooltip: 'Select all',
+                          IconButton(
+                            onPressed: _loadNotes,
+                            icon: Icon(
+                              Icons.refresh,
+                              color: theme.colorScheme.primary,
+                              size: 24,
                             ),
-                            IconButton(
-                              onPressed:
-                                  _selectedNoteIds.isEmpty
-                                      ? null
-                                      : () => _confirmAndDeleteSelected(),
-                              icon: Icon(
-                                Icons.delete_outline,
-                                color:
-                                    _selectedNoteIds.isEmpty
-                                        ? theme.colorScheme.onSurface
-                                            .withValues(alpha: 0.3)
-                                        : theme.colorScheme.error,
-                                size: 24,
-                              ),
+                          ),
+                          IconButton(
+                            onPressed: _confirmAndRunMigration,
+                            tooltip: 'Migrate note file names',
+                            icon: Icon(
+                              Icons.sync,
+                              color: theme.colorScheme.primary,
+                              size: 24,
                             ),
-                            IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  _selectionMode = false;
-                                  _selectedNoteIds.clear();
-                                });
-                              },
-                              icon: Icon(
-                                Icons.close,
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.6,
-                                ),
-                              ),
-                            ),
-                          ] else ...[
-                            IconButton(
-                              onPressed: _loadNotes,
-                              icon: Icon(
-                                Icons.refresh,
-                                color: theme.colorScheme.primary,
-                                size: 24,
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: _confirmAndRunMigration,
-                              tooltip: 'Migrate note file names',
-                              icon: Icon(
-                                Icons.sync,
-                                color: theme.colorScheme.primary,
-                                size: 24,
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  _selectionMode = true;
-                                });
-                              },
-                              tooltip: 'Select notes',
-                              icon: Icon(
-                                Icons.select_all,
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.6,
-                                ),
-                                size: 24,
-                              ),
-                            ),
-                          ],
+                          ),
                         ],
                       ),
                     ],
