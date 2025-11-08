@@ -930,7 +930,7 @@ class _InsightsPageState extends State<InsightsPage> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _crops[_selectedCropIndex],
+              initialValue: _crops[_selectedCropIndex],
               decoration: InputDecoration(
                 labelText: 'Select Crop',
                 border: OutlineInputBorder(
@@ -1269,7 +1269,7 @@ class _InsightsPageState extends State<InsightsPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       DropdownButtonFormField<String>(
-                        value: selectedCrop,
+                        initialValue: selectedCrop,
                         decoration: const InputDecoration(labelText: 'Crop'),
                         items:
                             _crops
@@ -1411,7 +1411,7 @@ class _InsightsPageState extends State<InsightsPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       DropdownButtonFormField<String>(
-                        value: selectedCrop,
+                        initialValue: selectedCrop,
                         decoration: const InputDecoration(labelText: 'Crop'),
                         items:
                             _crops

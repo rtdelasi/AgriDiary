@@ -8,7 +8,8 @@ class NotificationSettingsPage extends StatefulWidget {
   const NotificationSettingsPage({super.key});
 
   @override
-  State<NotificationSettingsPage> createState() => _NotificationSettingsPageState();
+  State<NotificationSettingsPage> createState() =>
+      _NotificationSettingsPageState();
 }
 
 class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
@@ -31,7 +32,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     final settingsJson = prefs.getString('notification_settings');
-    
+
     if (settingsJson != null) {
       final Map<String, dynamic> settings = json.decode(settingsJson);
       setState(() {
@@ -158,7 +159,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
           await _notificationService.showDailyPlanningReminder();
           break;
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -197,138 +198,157 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
         foregroundColor: textColor,
         elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: cardColor,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.notifications_active,
-                              color: Colors.blue,
-                              size: 24,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Notification Preferences',
-                              style: GoogleFonts.lato(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: textColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Customize which notifications you want to receive for your farming activities.',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  // Notification Settings
-                  ..._settings.entries.map((entry) => _buildNotificationSetting(
-                    key: entry.key,
-                    value: entry.value,
-                    cardColor: cardColor,
-                    textColor: textColor,
-                  )),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Test Notifications Section
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: cardColor,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.science,
-                              color: Colors.purple,
-                              size: 24,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Test Notifications',
-                              style: GoogleFonts.lato(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: textColor,
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.notifications_active,
+                                color: Colors.blue,
+                                size: 24,
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Send test notifications to verify your settings are working correctly.',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
+                              const SizedBox(width: 12),
+                              Text(
+                                'Notification Preferences',
+                                style: GoogleFonts.lato(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: _settings.entries.map((entry) => 
-                            ElevatedButton.icon(
-                              onPressed: () => _testNotification(entry.key),
-                              icon: Icon(_getSettingIcon(entry.key), size: 16),
-                              label: Text(_getSettingTitle(entry.key)),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _getSettingColor(entry.key).withValues(alpha: 0.1),
-                                foregroundColor: _getSettingColor(entry.key),
-                                elevation: 0,
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Customize which notifications you want to receive for your farming activities.',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
                             ),
-                          ).toList(),
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 24),
+
+                    // Notification Settings
+                    ..._settings.entries.map(
+                      (entry) => _buildNotificationSetting(
+                        key: entry.key,
+                        value: entry.value,
+                        cardColor: cardColor,
+                        textColor: textColor,
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Test Notifications Section
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.science,
+                                color: Colors.purple,
+                                size: 24,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Test Notifications',
+                                style: GoogleFonts.lato(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Send test notifications to verify your settings are working correctly.',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children:
+                                _settings.entries
+                                    .map(
+                                      (entry) => ElevatedButton.icon(
+                                        onPressed:
+                                            () => _testNotification(entry.key),
+                                        icon: Icon(
+                                          _getSettingIcon(entry.key),
+                                          size: 16,
+                                        ),
+                                        label: Text(
+                                          _getSettingTitle(entry.key),
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: _getSettingColor(
+                                            entry.key,
+                                          ).withValues(alpha: 0.1),
+                                          foregroundColor: _getSettingColor(
+                                            entry.key,
+                                          ),
+                                          elevation: 0,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 8,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
     );
   }
 
@@ -354,11 +374,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
       child: SwitchListTile(
         title: Row(
           children: [
-            Icon(
-              _getSettingIcon(key),
-              color: _getSettingColor(key),
-              size: 24,
-            ),
+            Icon(_getSettingIcon(key), color: _getSettingColor(key), size: 24),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -376,17 +392,14 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
           padding: const EdgeInsets.only(left: 36),
           child: Text(
             _getSettingDescription(key),
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.grey[600], fontSize: 14),
           ),
         ),
         value: value,
         onChanged: (newValue) => _updateSetting(key, newValue),
-        activeColor: _getSettingColor(key),
+        activeThumbColor: _getSettingColor(key),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
     );
   }
-} 
+}

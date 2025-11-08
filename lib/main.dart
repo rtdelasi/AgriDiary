@@ -47,8 +47,9 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _checkPermissions() async {
     final prefs = await SharedPreferences.getInstance();
-    final permissionsRequested = prefs.getBool('permissions_requested') ?? false;
-    
+    final permissionsRequested =
+        prefs.getBool('permissions_requested') ?? false;
+
     if (permissionsRequested) {
       // If permissions were already requested, skip permission request page
       // and go directly to home page regardless of current permission status
@@ -75,9 +76,12 @@ class _MyAppState extends State<MyApp> {
           theme: _buildLightTheme(),
           darkTheme: _buildDarkTheme(),
           themeMode: themeProvider.themeMode,
-          home: _permissionsChecked
-              ? (_permissionsGranted ? const HomePage() : const PermissionRequestPage())
-              : const HomePage(), // Show home page while checking permissions
+          home:
+              _permissionsChecked
+                  ? (_permissionsGranted
+                      ? const HomePage()
+                      : const PermissionRequestPage())
+                  : const HomePage(), // Show home page while checking permissions
         );
       },
     );
@@ -102,11 +106,9 @@ class _MyAppState extends State<MyApp> {
           color: const Color(0xFF1B5E20),
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: Colors.white,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -173,11 +175,9 @@ class _MyAppState extends State<MyApp> {
           color: Colors.white,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: const Color(0xFF1E1E1E),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(

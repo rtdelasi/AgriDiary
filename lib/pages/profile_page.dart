@@ -22,10 +22,11 @@ class _ProfilePageState extends State<ProfilePage> {
   void _navigateToEditProfile(UserProfileProvider userProfileProvider) async {
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => EditProfilePage(
-          currentName: userProfileProvider.name,
-          currentEmail: userProfileProvider.email,
-        ),
+        builder:
+            (context) => EditProfilePage(
+              currentName: userProfileProvider.name,
+              currentEmail: userProfileProvider.email,
+            ),
       ),
     );
 
@@ -34,7 +35,9 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<void> _pickImageFromGallery(UserProfileProvider userProfileProvider) async {
+  Future<void> _pickImageFromGallery(
+    UserProfileProvider userProfileProvider,
+  ) async {
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
@@ -47,20 +50,21 @@ class _ProfilePageState extends State<ProfilePage> {
       if (image != null && mounted) {
         await Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => ImagePreviewPage(
-              imagePath: image.path,
-              onImageSelected: (String croppedImagePath) {
-                userProfileProvider.updateProfilePhoto(croppedImagePath);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Profile photo updated successfully!'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              },
-            ),
+            builder:
+                (context) => ImagePreviewPage(
+                  imagePath: image.path,
+                  onImageSelected: (String croppedImagePath) {
+                    userProfileProvider.updateProfilePhoto(croppedImagePath);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Profile photo updated successfully!'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  },
+                ),
           ),
         );
       }
@@ -137,7 +141,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -161,7 +165,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     Consumer<UserProfileProvider>(
                       builder: (context, userProfileProvider, child) {
                         return GestureDetector(
-                          onTap: () => _showImagePickerDialog(userProfileProvider),
+                          onTap:
+                              () => _showImagePickerDialog(userProfileProvider),
                           child: Stack(
                             children: [
                               Container(
@@ -171,7 +176,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.1),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.1,
+                                      ),
                                       blurRadius: 20,
                                       offset: const Offset(0, 10),
                                     ),
@@ -179,17 +186,24 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                                 child: CircleAvatar(
                                   radius: 60,
-                                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                                  backgroundImage: userProfileProvider.photoPath != null
-                                      ? FileImage(File(userProfileProvider.photoPath!))
-                                      : null,
-                                  child: userProfileProvider.photoPath == null
-                                      ? Icon(
-                                          Icons.person,
-                                          size: 60,
-                                          color: theme.colorScheme.primary,
-                                        )
-                                      : null,
+                                  backgroundColor: theme.colorScheme.primary
+                                      .withValues(alpha: 0.1),
+                                  backgroundImage:
+                                      userProfileProvider.photoPath != null
+                                          ? FileImage(
+                                            File(
+                                              userProfileProvider.photoPath!,
+                                            ),
+                                          )
+                                          : null,
+                                  child:
+                                      userProfileProvider.photoPath == null
+                                          ? Icon(
+                                            Icons.person,
+                                            size: 60,
+                                            color: theme.colorScheme.primary,
+                                          )
+                                          : null,
                                 ),
                               ),
                               Positioned(
@@ -202,7 +216,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.2),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.2,
+                                        ),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       ),
@@ -239,7 +255,9 @@ class _ProfilePageState extends State<ProfilePage> {
                               userProfileProvider.email,
                               style: GoogleFonts.inter(
                                 fontSize: 16,
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.7,
+                                ),
                               ),
                             ),
                           ],
@@ -297,7 +315,10 @@ class _ProfilePageState extends State<ProfilePage> {
             title: 'Edit Profile',
             subtitle: 'Update your personal information',
             onTap: () {
-              final userProfileProvider = Provider.of<UserProfileProvider>(context, listen: false);
+              final userProfileProvider = Provider.of<UserProfileProvider>(
+                context,
+                listen: false,
+              );
               _navigateToEditProfile(userProfileProvider);
             },
             theme: theme,
@@ -307,22 +328,26 @@ class _ProfilePageState extends State<ProfilePage> {
           Consumer<ThemeProvider>(
             builder: (context, themeProvider, child) {
               return _buildSettingsTile(
-                icon: themeProvider.themeMode == ThemeMode.dark
-                    ? Icons.dark_mode
-                    : Icons.light_mode,
+                icon:
+                    themeProvider.themeMode == ThemeMode.dark
+                        ? Icons.dark_mode
+                        : Icons.light_mode,
                 title: 'Theme',
-                subtitle: themeProvider.themeMode == ThemeMode.dark
-                    ? 'Dark Mode'
-                    : 'Light Mode',
+                subtitle:
+                    themeProvider.themeMode == ThemeMode.dark
+                        ? 'Dark Mode'
+                        : 'Light Mode',
                 trailing: Switch(
                   value: themeProvider.themeMode == ThemeMode.dark,
                   onChanged: (value) {
                     themeProvider.toggleTheme(value);
                   },
-                  activeColor: theme.colorScheme.primary,
+                  activeThumbColor: theme.colorScheme.primary,
                 ),
                 onTap: () {
-                  themeProvider.toggleTheme(themeProvider.themeMode != ThemeMode.dark);
+                  themeProvider.toggleTheme(
+                    themeProvider.themeMode != ThemeMode.dark,
+                  );
                 },
                 theme: theme,
               );
@@ -369,9 +394,7 @@ class _ProfilePageState extends State<ProfilePage> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const HelpPage(),
-                ),
+                MaterialPageRoute(builder: (context) => const HelpPage()),
               );
             },
             theme: theme,
@@ -397,11 +420,7 @@ class _ProfilePageState extends State<ProfilePage> {
           color: theme.colorScheme.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(
-          icon,
-          color: theme.colorScheme.primary,
-          size: 24,
-        ),
+        child: Icon(icon, color: theme.colorScheme.primary, size: 24),
       ),
       title: Text(
         title,
@@ -415,13 +434,15 @@ class _ProfilePageState extends State<ProfilePage> {
         subtitle,
         style: GoogleFonts.inter(
           fontSize: 14,
-                                   color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
         ),
       ),
-      trailing: trailing ?? Icon(
-        Icons.chevron_right,
-                 color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-      ),
+      trailing:
+          trailing ??
+          Icon(
+            Icons.chevron_right,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+          ),
       onTap: onTap,
     );
   }
@@ -429,7 +450,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildDivider(ThemeData theme) {
     return Divider(
       height: 1,
-               color: theme.colorScheme.outline.withValues(alpha: 0.1),
+      color: theme.colorScheme.outline.withValues(alpha: 0.1),
       indent: 60,
       endIndent: 20,
     );

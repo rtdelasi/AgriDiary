@@ -22,10 +22,10 @@ class AppDrawer extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-                         colors: [
-               theme.colorScheme.primary.withValues(alpha: 0.1),
-               theme.colorScheme.surface,
-             ],
+            colors: [
+              theme.colorScheme.primary.withValues(alpha: 0.1),
+              theme.colorScheme.surface,
+            ],
           ),
         ),
         child: Column(
@@ -105,7 +105,9 @@ class AppDrawer extends StatelessWidget {
                                     : 'Light Mode',
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.7,
+                                  ),
                                 ),
                               ),
                             ],
@@ -116,7 +118,7 @@ class AppDrawer extends StatelessWidget {
                           onChanged: (value) {
                             themeProvider.toggleTheme(value);
                           },
-                          activeColor: theme.colorScheme.primary,
+                          activeThumbColor: theme.colorScheme.primary,
                         ),
                       ],
                     ),
@@ -154,10 +156,10 @@ class AppDrawer extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-                     colors: [
-             theme.colorScheme.primary,
-             theme.colorScheme.primary.withValues(alpha: 0.8),
-           ],
+          colors: [
+            theme.colorScheme.primary,
+            theme.colorScheme.primary.withValues(alpha: 0.8),
+          ],
         ),
       ),
       child: Column(
@@ -182,16 +184,14 @@ class AppDrawer extends StatelessWidget {
                 child: CircleAvatar(
                   radius: 27,
                   backgroundColor: Colors.white.withValues(alpha: 0.2),
-                  backgroundImage: userProfileProvider.photoPath != null
-                      ? FileImage(File(userProfileProvider.photoPath!))
-                      : null,
-                  child: userProfileProvider.photoPath == null
-                      ? Icon(
-                          Icons.person,
-                          size: 30,
-                          color: Colors.white,
-                        )
-                      : null,
+                  backgroundImage:
+                      userProfileProvider.photoPath != null
+                          ? FileImage(File(userProfileProvider.photoPath!))
+                          : null,
+                  child:
+                      userProfileProvider.photoPath == null
+                          ? Icon(Icons.person, size: 30, color: Colors.white)
+                          : null,
                 ),
               ),
               const SizedBox(width: 16),
@@ -230,11 +230,7 @@ class AppDrawer extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.agriculture,
-                  color: Colors.white,
-                  size: 16,
-                ),
+                Icon(Icons.agriculture, color: Colors.white, size: 16),
                 const SizedBox(width: 6),
                 Text(
                   'Active Farmer',
@@ -262,9 +258,10 @@ class AppDrawer extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: isLogout 
-            ? theme.colorScheme.error.withValues(alpha: 0.1)
-            : Colors.transparent,
+        color:
+            isLogout
+                ? theme.colorScheme.error.withValues(alpha: 0.1)
+                : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
       ),
       child: ListTile(
@@ -272,16 +269,16 @@ class AppDrawer extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-                     color: isLogout
-             ? theme.colorScheme.error.withValues(alpha: 0.1)
-             : theme.colorScheme.primary.withValues(alpha: 0.1),
+            color:
+                isLogout
+                    ? theme.colorScheme.error.withValues(alpha: 0.1)
+                    : theme.colorScheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
             icon,
-            color: isLogout
-                ? theme.colorScheme.error
-                : theme.colorScheme.primary,
+            color:
+                isLogout ? theme.colorScheme.error : theme.colorScheme.primary,
             size: 24,
           ),
         ),
@@ -290,15 +287,14 @@ class AppDrawer extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: isLogout
-                ? theme.colorScheme.error
-                : theme.colorScheme.onSurface,
+            color:
+                isLogout
+                    ? theme.colorScheme.error
+                    : theme.colorScheme.onSurface,
           ),
         ),
         onTap: onTap,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
